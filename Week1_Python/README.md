@@ -45,8 +45,8 @@ Today I learned the foundations of Python programming. The exercises helped soli
 
 ---
 
-**Date Completed:** [06.02.2025]
-**GitHub:** [https://github.com/arunesh1125-pro]
+**Date Completed:** [Today's Date]
+**GitHub:** [Your GitHub Profile Link]
 ```
 
 ---
@@ -74,6 +74,6 @@ Following the "Learn in Public" philosophy - sharing every win and struggle.
 
 #MachineLearning #AI #Python #100DaysOfCode #LearnInPublic #AIJourney
 
-GitHub: [(https://github.com/arunesh1125-pro)]
+GitHub: [Your GitHub Link]
 
 Day 1/540 ✅

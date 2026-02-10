@@ -1,0 +1,116 @@
+import numpy as np
+
+"""
+This file shows how NumPy operations relate to Machine Learning
+Understanding this will make ML algorithms crystal clear!
+"""
+
+# EXAMPLE 1: Linear Regression (Simplified)
+
+print("="*50)
+print("LINEAR REGRESSION EXAMPLE")
+print("="*50)
+
+# y = mx + c (line equaltion)
+# Given some data points, find best m and c
+
+# Sample data
+x = np.array([1,2,3,4,5]) #Input features
+y = np.array([2,4,6,8,10]) #True outputs (y=2x)
+
+print("X (inputs):", x)
+print("Y (true outputs: )", y)
+print()
+
+#Intial guess: m=1.5, c=0.5
+m = 1.5
+c = 0.5
+
+#Predict using current m and c
+y_pred = m*x + c
+print("Predicted y: ", y_pred)
+print()
+
+#Calculate (Mean Squared Error)
+error = y-y_pred
+mse = np.mean(error**2)
+print("Mean Squared Error: ", mse)
+print()
+
+ # EXAMPLE 2 : Dot Product (Neural Network)
+
+print("="*50)
+print("NEURAL NETWORK LAYER EXAMPLE")
+print("="*50)
+
+# Imagine: 3 input features, 4 neurons in next layer 
+inputs = np.array([1.0, 2.0, 3.0]) #One sample with 3 features
+weights = np.array([
+    [0.1, 0.2, 0.3, 0.4],        #Weights for feature 1 to 4 neurons
+    [0.5, 0.6, 0.7, 0.8],        #Weights for feature 2 to 4 neurons
+    [0.9, 1.0, 1.1, 1.2]         #Weights for feature 3 to 4 neurons
+])
+bias = np.array([0.1, 0.2, 0.3, 0.4])
+
+print("Input Shape: ", inputs.shape)
+print("Weights shape: ", weights.shape)
+print("Bias Shape: ", bias.shape)
+print()
+
+# Forward pass: output = inputs.weights + bias
+output = np.dot(inputs, weights) + bias
+print("Output:", output)
+print("Output Shape: ", output.shape) #(4,) 4 neurons activated
+print()
+
+ # EXAMPLE 3: Batch Processing
+batch_inputs = np.array([
+    [1.0, 2.0, 3.0, ],      #Sample 1
+    [4.0, 5.0, 6.0],         #Sample 2
+    [7.0, 8.0, 9.0]          #Sample 3
+])
+
+print('batch inputs shape: ', batch_inputs.shape)  # (3, 3) - 3 samples, 3 features
+print()
+
+#Same weights and Bias as before
+batch_output = np.dot(batch_inputs, weights) + bias
+print("Batch output:\n", batch_output)
+print("Batch output Shape: ", batch_output.shape)
+print()
+
+ # Example 4: Activation Function (ReLu)
+
+print("=" * 50)
+print("ACTIVATION FUNCTION (ReLU) EXAMPLE")
+print("=" * 50)
+
+# ReLU: max(0, x) - sets negative values to 0
+z = np.array([-2,-1,0,1,2,]) # Z is a combined output from weighted sum with bias (Input*weight)+bias
+relu = np.maximum(0, z)
+
+print("Before ReLU: ", z)
+print("After ReLU: ", relu)
+print()
+
+ # EXAMPLE 5 : Softmax (Classification)
+
+print("=" * 50)
+print("SOFTMAX (CLASSIFICATION) EXAMPLE")
+print("=" * 50)
+
+# Convert scores into probabilities
+scores = np.array([2.0, 1.0, 0.1])
+
+#Softmax formula: exp(x) / sum(exp(x))
+exp_scores = np.exp(scores)
+probabilities = exp_scores / np.sum(exp_scores)
+
+print("Scores :", scores)
+print("Probabilities: ", probabilities)
+print('Sum of probabilities: ', np.sum(probabilities)) #Should be 1.0
+print()
+
+# Highest probability - predicted class
+predicted_class = np.argmax(probabilities)
+print("Predicted_class :", predicted_class)

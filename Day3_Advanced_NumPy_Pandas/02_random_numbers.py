@@ -44,7 +44,7 @@ standard_norm = np.random.randn(5)
 print("Standard normal (μ=0, σ=1): ", standard_norm)
 print()
 
-# Normal ith custom mean and std
+# Normal with custom mean and std
 # Formula: mean + std*randn
 mean, std = 100, 15
 custom_norm = mean + std * np.random.randn(10)

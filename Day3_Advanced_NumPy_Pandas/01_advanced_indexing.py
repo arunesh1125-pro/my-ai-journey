@@ -39,7 +39,7 @@ arr = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
 print("Original: ", arr)
 print()
 
-# Replace values: if > 5, replave with 100, else keeep original
+# Replace values: if > 5, replace with 100, else keeep original
 result = np.where(arr > 5, 100, arr)
 print("After np.where (>5 -> 100)", result)
 print()

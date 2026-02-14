@@ -90,6 +90,10 @@ print()
 
 # 5. PRODUCT x REGION INSIGHTS
 
+print("="*70)
+print("SECTION 4: PRODUCT × REGION INSIGHTS")
+print("="*70)
+
 pivot = df.pivot_table(
     values='Sales',
     index='Product',

@@ -1,10 +1,10 @@
 import pandas as pd
 import os
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-file_path = os.path.join(BASE_DIR, "sales_data.csv")
+#BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+#file_path = os.path.join(BASE_DIR, "sales_data.csv")
 
-df = pd.read_csv(file_path)
+#df = pd.read_csv(file_path)
 
  # READING CSV FILES
 
@@ -13,7 +13,7 @@ print("READING CSV DATA")
 print("="*60)
 
 # Read CSV
-#df = pd.read_csv('sales_data.csv')
+df = pd.read_csv('sales_data.csv')
 
 print("Data loaded successfully!")
 print(f"Shape: {df.shape}")
@@ -83,7 +83,7 @@ print("="*60)
 
 # High-value sales (>50000)
 high_value = df[df['Sales'] > 50000]
-print(f"High-vlaue sales (>50000): {len(high_value)} records")
+print(f"High-value sales (>50000): {len(high_value)} records")
 print(high_value.head())
 print()
 

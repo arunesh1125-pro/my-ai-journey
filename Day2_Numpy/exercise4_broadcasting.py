@@ -20,7 +20,7 @@ print()
 # Task 3 : Normalize 2D DATASET
 # Create a random dataset: 10 sample , 5 features
 
-dataset = np.random.randn(10, 5) * 10 + 50 #raespon for *10 + 50, intially randn is normalised random values , where std was 1 and mean was in 0 bcz of normalized format. now, multiplying through 10 becomes, new std value 1(old std) becomes 10(new std), and after adding + 50 ,new mean value becomes 50
+dataset = np.random.randn(10, 5) * 10 + 50 #reason for *10 + 50, intially randn is normalised random values , where std was 1 and mean was in 0 bcz of normalized format. now, multiplying through 10 becomes, new std value 1(old std) becomes 10(new std), and after adding + 50 ,new mean value becomes 50
 print("Original datset: \n", dataset[:5 ])
 print()
 

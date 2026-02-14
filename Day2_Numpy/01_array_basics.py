@@ -74,7 +74,7 @@ normal = np.random.randn(5) #Mean=0, Std=1
 print('Normal Distribution: ', normal)
 print()
 
- # DATA TYOES
+ # DATA TYPES
 
 # Specific data type
 float_array = np.array([1, 2, 3], dtype=np.float32)

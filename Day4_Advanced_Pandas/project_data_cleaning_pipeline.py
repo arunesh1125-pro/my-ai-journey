@@ -362,5 +362,5 @@ print(f"\n✅ Saved cleaned data to 'cleaned_employee_data.csv'")
 
 print("""
 PIPELINE COMPLETE!
-Raw mssy data -> Professional ML-ready dataset
+Raw messy data -> Professional ML-ready dataset
 """)

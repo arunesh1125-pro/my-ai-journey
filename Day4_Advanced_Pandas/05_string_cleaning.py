@@ -82,7 +82,7 @@ print()
   # EMAIL VALIDATION
 
 print("="*70)
-print("PHONE NUMBER CLEANING")
+print("EMAIL VALIDATION")
 print("="*70)
 
 def validate_email(email):

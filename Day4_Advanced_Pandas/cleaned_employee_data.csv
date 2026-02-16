@@ -1,0 +1,11 @@
+emp_id,employee_name,age,department,salary,join_date,email,phone,performance_score,city,years_experience,salary_grade,performance_category
+E001,Alice Johnson,25.0,IT,50000.0,2021-01-15,alice.j@company.com,9876543210,4.5,Chennai,5.1,Entry,Excellent
+E002,Bob Smith,30.0,HR,60000.0,2021-02-15,bob.smith@company.com,9876543211,3.8,Mumbai,5.0,Mid,Good
+E003,Charlie Brown,35.0,IT,75000.0,2021-03-03,charlie.b@company.com,9876543212,4.2,Delhi,5.0,Senior,Excellent
+E004,David Lee,30.0,Finance,55000.0,2021-04-04,,9876543213,4.05,Bangalore,4.9,Entry,Excellent
+E005,Eve Wilson,28.0,HR,70000.0,2021-05-10,eve.w@company.com,9876543214,4.65,Kolkata,4.8,Senior,Outstanding
+E006,Frank O Brien,30.0,IT,65000.0,2021-06-15,frank.ob@company.com,,3.5,Hyderabad,4.7,Mid,Needs Improvement
+E900,Grace Kim,32.0,Finance,55000.0,2021-07-07,grace.k@company.com,9876543216,4.0,Pune,4.6,Entry,Good
+E008,Henry Park,29.0,,,2021-08-20,henry.p@company.com,9876543217,,Chennai,4.5,,
+E009,,31.0,IT,72000.0,2021-09-01,,9876543218,3.9,Mumbai,4.5,Senior,Good
+E010,Jack Chen,30.0,Finance,55000.0,2021-10-15,jack.c@company.com,9876543219,4.1,Delhi,4.3,Entry,Excellent

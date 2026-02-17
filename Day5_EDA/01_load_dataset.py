@@ -35,7 +35,7 @@ sex = np.random.choice(['male', 'female'], n, p=[0.65, 0.35])
 # Age (some missing ~20%)
 age = np.where(
     np.random.randn(n) < 0.2, # where function checks condition, is_True, is_False, 
-    np.nan,
+    np.nan, 
     np.clip(np.random.normal(30, 14, n), 0.5, 80)  #(30, 14, n) - mean=30, std=14. clips them between 0.5 and 80 to ensure realistic ages
 )
 
@@ -61,7 +61,7 @@ fare = np.where(
 fare = np.where(np.random.random(n) < 0.02, np.nan, fare)
 
 # Embarked port (S: 72%, C: 19%, Q: 9%)
-embarked = np.where(
+embarked = np.where( 
     np.random.random(n) < 0.02,
     np.nan,
     np.random.choice(['S', 'C', 'Q'], n, p=[0.72, 0.19, 0.09])
@@ -122,7 +122,7 @@ df = pd.DataFrame({
     'Ticket': tickets,
     'Fare': fare.round(2),
     'Cabin': cabin,
-    'Emabarked': embarked
+    'Embarked': embarked
 })
 
 # Save dataset

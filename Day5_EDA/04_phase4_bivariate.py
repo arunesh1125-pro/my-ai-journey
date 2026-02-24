@@ -169,7 +169,7 @@ print("💡 1st class females: near 100% survival")
 print("💡 3rd class males: very low survival")
 print()
 
-# Age goups vs survival
+# Age groups vs survival
 df['Age_Group'] = pd.cut(    #pd.cut() - used to segement and sort data values into bins
     df['Age'], # Input
     bins = [0, 12, 18, 35, 60, 100],  # Bins - 0to12, 12to18, etc

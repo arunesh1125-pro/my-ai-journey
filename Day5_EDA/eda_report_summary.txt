@@ -1,0 +1,14 @@
+TITANIC EDA REPORT SUMMARY
+==================================================
+
+Dataset: 891 passengers
+Survival rate: 36.1%
+
+TOP INSIGHTS:
+1. Women: 87.7% vs Men: 6.4%
+2. 1st class: 52.4% vs 3rd class: 30.9%
+3. Children (<12): 37.1%
+4. Solo travelers: 39.0%
+
+ML PREPARATION Complete
+Files: titanic_ml_ready.csv

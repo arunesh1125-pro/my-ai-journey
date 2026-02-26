@@ -1,0 +1,149 @@
+"""
+CAPSTONE PROJECT: Complete Visual Analysis of Titanic Dataset
+Professional-grade visualization report
+This is your Portfolio Project #7!
+"""
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+import matplotlib.gridspec as gridspec
+from matplotlib.patches import Rectangle
+
+print("="*70)
+print("TITANIC DATASET: COMPLETE VISUAL ANALYSIS")
+print("="*70)
+
+# Load data
+df = pd.read_csv('../Day5_EDA/titanic.csv')
+
+# Feature Engineering
+df['Family_Size'] = df['SibSp'] + df['Parch'] + 1
+df['Is_Alone'] = (df['Family_Size']==1).astype(int)
+df['Age_Group'] = pd.cut(df['Age'],
+                         bins=[0, 12, 18, 35, 60, 100],
+                         labels=['Child', 'Teen', 'Yound Adult', 'Adult', 'Senior'])
+df['Title'] = df['Name'].str.extract(r',\s([^\.]+)\.')[0]
+
+print("✅ Data loaded and prepared")
+print(f"   Shape: {df.shape}")
+print()
+
+# VISUALIZATION 1: OVERVIEW DASHBOARD
+
+print("Creating Visualization 1: Overview Dashboard...")
+
+fig = plt.figure(figsize=(16, 10))
+fig.suptitle('TITANIC DISASTER: SURVIVAL ANALYSIS DASHBOARD', 
+             fontsize=20, fontweight='bold', y=0.98)
+
+gs = gridspec.GridSpec(3, 3, figure=fig, hspace=0.3, wspace=0.3)
+
+# 1. Survival Rate (Big number + pie) (Pie- Parts of whole, Total - survived)
+ax1 = fig.add_subplot(gs[0, 0])
+survival_rate = df['Survived'].mean()
+survived = df['Survived'].sum()
+total = len(df)
+
+sizes = [survived, total-survived]
+colors = ['#2ecc71', '#e74c3c']
+explode = (0.1, 0)
+
+ax1.pie(sizes, explode=explode, labels=['Survived', 'Died'], colors=colors,
+        autopct='%1.1f%%', startangle=90, textprops={'fontsize': 11, 'fontweight': 'bold'})
+ax1.set_title(f'Overall Survival: {survival_rate:.1%}', fontweight='bold', fontsize=12)
+
+# 2. Survival by Gender (Bar)
+ax2 = fig.add_subplot(gs[0, 1])
+gender_survival = df.groupby('Sex')['Survived'].agg(['sum', 'count', 'mean'])
+ax2.bar(['Female', 'Male'], gender_survival['mean'],
+        color=['#ff69b4', '#4169e1'], edgecolor='black', linewidth=2)
+ax2.set_ylabel('Survival_Rate', fontweight='bold')
+ax2.set_xlabel('Survival by Gender', fontweight='bold', fontsize=12)
+ax2.set_ylim(0, 1)
+ax2.grid(axis='y', alpha=0.3)
+for i, v in enumerate(gender_survival['mean']):
+    ax2.text(i, v + 0.02, f'{v:.1%}', ha='center', fontweight='bold', fontsize=11)
+
+# 3. Survival by Class (Bar)
+ax3 = fig.add_subplot(gs[0, 2])
+class_survival = df.groupby('Pclass')['Survived'].mean()
+color_class = ['#FFD700', '#C0C0C0', '#CD7F32']
+ax3.bar([1, 2, 3], class_survival, color=color_class, edgecolor='black', linewidth=2)
+ax3.set_xlabel('Passenger Class', fontweight='bold')
+ax3.set_ylabel('Survival Rate', fontweight='bold')
+ax3.set_title('Survival by Class', fontweight='bold', fontsize=12)
+ax3.set_ylim(0, 1)
+ax3.grid(axis='y', alpha=0.3)
+for i, v in enumerate(class_survival):
+    ax3.text(i, v + 0.02, f'{v:.1%}', ha='center', fontweight='bold', fontsize=11)
+
+# 4. Age Distribution (Distribution of 1 numeric variable : Histogram)
+ax4 = fig.add_subplot(gs[1, :2])
+survived_ages = df[df['Survived'] == 1]['Age'].dropna()
+died_ages = df[df['Survived'] == 0]['Age'].dropna()
+ax4.hist([survived_ages, died_ages], bins=20, label=['Survived', 'Died'],
+         color=['#2ecc71', '#e74c3c'], alpha=0.7, edgecolor='black')
+ax4.set_xlabel('Age (years)', fontweight='bold', fontsize=11)
+ax4.set_ylabel('Frequency', fontweight='bold', fontsize=11)
+ax4.set_title('Age Distribution by Survival', fontweight='bold', fontsize=12)
+ax4.legend(fontsize=10)
+ax4.grid(axis='y', alpha=0.3)
+
+# 5. Family Size Impact (line plot - trend over time)
+ax5 = fig.add_subplot(gs[1, 2])
+family_survival = df.groupby('Family_Size')['Survived'].mean()
+ax5.plot(family_survival.index, family_survival.values, marker='o', markersize=10, linewidth=3, color='#9b59b6')
+ax5.set_xlabel('Family Size', fontweight='bold', fontsize=11)
+ax5.set_xlabel('Survival Rate', fontweight='bold', fontsize=11)
+ax5.set_title('Family Size Impact', fontweight='bold', fontsize=12)
+ax5.grid(True, alpha=0.3)
+ax5.set_ylim(0, 1)
+
+# 6. Fare Distribution (box plot- statistical sumary+ outliers)
+ax6 = fig.add_subplot(gs[2, 0])
+ax6.boxplot([df[df['Pclass']==1]['Fare'].dropna(),
+             df[df['Pclass']==2]['Fare'].dropna(),
+             df[df['Pclass']==3]['Fare'].dropna()],
+             labels=['1st', '2nd', '3rd'],
+             patch_artist=True)
+ax6.set_xlabel('Class', fontweight='bold', fontsize=11)
+ax6.set_ylabel('Fare (£)', fontweight='bold', fontsize=11)
+ax6.set_title('Fare by Class', fontweight='bold', fontsize=1)
+ax6.grid(axis='y', alpha=0.3)
+
+# 7. Embarkation Port (Bar Chart - Compare Categories)
+ax7 = fig.add_subplot(gs[2, 1])
+embark_survival = df.groupby('Embarked')['Survived'].mean()
+ports = {'S': 'Southampton', 'C': 'Cherbourg', 'Q': 'Queenstown'}
+labels = [ports.get(p, p) for p in embark_survival.index]
+ax7.bar(labels, embark_survival.values, color=['#3498db', '#e74c3c', '#2ecc71'],
+        edgecolor='black', linewidth=2)
+ax7.set_ylabel('Survival Rate', fontweight='bold', fontsize=11)
+ax7.set_title('Survival by Embarkation', fontweight='bold', fontsize=12)
+ax7.set_ylim(0, 1)
+ax7.grid(axis='y', alpha=0.3)
+for i, v in enumerate(embark_survival.values):
+    ax7.text(i, v + 0.02, f'{v:.1%}', ha='center', fontweight='bold', fontsize=10)
+
+# 8. Class x Gender (Bar Chart - Compare Categories)
+ax8 = fig.add_subplot(gs[2, 2])
+crosstab = pd.crosstab(df['Pclass'], df['Sex'], values=df['Survived'], aggfunc='mean')
+x = np.arange(3)
+width = 0.35
+ax8.bar(x - width/2, crosstab['female'], width, label='Female',
+        color='#ff69b4', edgecolor='black')
+ax8.bar(x + width/2, crosstab['male'], width, label='Male',
+        color='#4169e1', edgecolor='black')
+ax8.set_xlabel('Class', fontweight='bold', fontsize=11)
+ax8.set_ylabel('Survival Rate', fontweight='bold', fontsize=11)
+ax8.set_title('Class × Gender Survival', fontweight='bold', fontsize=12)
+ax8.set_xticks(x)
+ax8.set_xticklabels(['1st', '2nd', '3rd'])
+ax8.legend(fontsize=10)
+ax8.set_ylim(0, 1)
+ax8.grid(axis='y', alpha=0.3)
+
+plt.savefig('16_titanic_dashboard.png', dpi=300, bbox_inches='tight')
+plt.close()
+print("✅ Created: 16_titanic_dashboard.png")

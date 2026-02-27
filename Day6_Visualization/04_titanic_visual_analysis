@@ -208,7 +208,7 @@ plt.savefig('17_age_analysis.png', dpi=300, bbox_inches='tight')
 plt.close()
 print("✅ Created: 17_age_analysis.png")
 
-# VISUALIZATION 3l SOCIOECONOMIC ANALYSIS
+# VISUALIZATION 3: SOCIOECONOMIC ANALYSIS
 
 print("Creating Visualization 3: Socioeconomic Analysis...")
 
@@ -265,19 +265,19 @@ class_stats = df.groupby('Pclass').agg({
     'Age': 'median'
 })
 
-x = np.arange(3)
-width = 0.25
+x1 = np.arange(3)
+width1 = 0.25
 
 # Normalize for visibility
 survival_normalized = class_stats['Survived'].values
 fare_normalized = class_stats['Fare'].values / class_stats['Fare'].max()
 age_normalized = class_stats['Age'].values / class_stats['Age'].max()
 
-axs4.bar(x - width, survival_normalized, width, label='Survival Rate',
+axs4.bar(x1 - width1, survival_normalized, width1, label='Survival Rate',
         color='#2ecc71', edgecolor='black')
-axs4.bar(x, fare_normalized, width, label='Median Fare (normalized)',
+axs4.bar(x1, fare_normalized, width1, label='Median Fare (normalized)',
         color='#3498db', edgecolor='black')
-axs4.bar(x + width, age_normalized, width, label='Median Age (normalized)',
+axs4.bar(x1 + width1, age_normalized, width1, label='Median Age (normalized)',
         color='#f39c12', edgecolor='black')
 
 axs4.set_xlabel('Passenger Class', fontweight='bold', fontsize=12)
@@ -291,3 +291,118 @@ axs4.grid(axis='y', alpha=0.3)
 plt.savefig('18_socioeconomic.png', dpi=300, bbox_inches='tight')
 plt.close()
 print("✅ Created: 18_socioeconomic.png")
+
+# VISUALIZATION 4: FAMILY & SURVIVAL
+
+print("Creating Visualization 4: Family Analysis...")
+
+fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+fig.suptitle('FAMILY COMPOSITION & SURVIVAL', fontsize=18, fontweight='bold')
+
+# Family size distribution
+axes[0, 0].hist(df['Family_Size'], bins=range(1, 12), edgecolor='black',
+                color='#9b59b6', alpha=0.7)
+axes[0, 0].set_xlabel('Family Size', fontweight='bold')
+axes[0, 0].set_ylabel('Count', fontweight='bold')
+axes[0, 0].set_title('Family Size Distribution', fontweight='bold', fontsize=14)
+axes[0, 0].grid(axis='y', alpha=0.3)
+
+# Family size vs survival
+family_survival = df.groupby('Family_Size')['Survived'].agg(['mean', 'count'])
+axes[0, 1].plot(family_survival.index, family_survival['mean'],
+                marker='o', markersize=10, linewidth=3, color='#e74c3c')
+axes[0, 1].set_xlabel('Family Size', fontweight='bold')
+axes[0, 1].set_ylabel('Survival Rate', fontweight='bold')
+axes[0, 1].set_title('Survival by Family Size', fontweight='bold', fontsize=14)
+axes[0, 1].grid(True, alpha=0.3)
+axes[0, 1].set_ylim(0, 1)
+axes[0, 1].axhline(y=df['Survived'].mean(), color='green', linestyle='--',
+                    linewidth=2, label='Overall Average')
+axes[0, 1].legend()
+
+# Alone vs with family
+alone_survival = df.groupby('Is_Alone')['Survived'].mean()
+axes[1, 0].bar(['With Family', 'Alone'],
+               [alone_survival[0], alone_survival[1]],
+               color=['#2ecc71', '#e74c3c'], edgecolor='black', linewidth=2)
+axes[1, 0].set_ylabel('Survival Rate', fontweight='bold')
+axes[1, 0].set_title('Solo vs Family Travelers', fontweight='bold', fontsize=14)
+axes[1, 0].set_ylim(0, 1)
+axes[1, 0].grid(axis='y', alpha=0.3)
+for i, v in enumerate([alone_survival[0], alone_survival[1]]):
+    axes[1, 0].text(i, v + 0.02, f'{v:.1%}', ha='center',
+                    fontweight='bold', fontsize=12)
+
+# SibSp vs Parch
+sibsp_survival = df.groupby('SibSp')['Survived'].mean()
+parch_survival = df.groupby('Parch')['Survived'].mean()
+
+x_sibsp = sibsp_survival.index
+x_parch = parch_survival.index
+
+axes[1, 1].plot(x_sibsp, sibsp_survival.values, marker='o', markersize=8,
+                linewidth=2, label='Siblings/Spouses', color='#3498db')
+axes[1, 1].plot(x_parch, parch_survival.values, marker='s', markersize=8,
+                linewidth=2, label='Parents/Children', color='#e74c3c')
+
+axes[1, 1].set_xlabel('Number of Relatives', fontweight='bold')
+axes[1, 1].set_ylabel('Survival Rate', fontweight='bold')
+axes[1, 1].set_title('SibSp vs Parch Impact', fontweight='bold', fontsize=14)
+axes[1, 1].legend()
+axes[1, 1].grid(True, alpha=0.3)
+axes[1, 1].set_ylim(0, 1)
+
+plt.tight_layout()
+plt.savefig('19_family_analysis.png', dpi=300, bbox_inches='tight')
+plt.close()
+print("✅ Created: 19_family_analysis.png")
+
+# ============================================
+# FINAL SUMMARY REPORT
+# ============================================
+
+print("\n" + "="*70)
+print("VISUALIZATION REPORT COMPLETE!")
+print("="*70)
+
+print(f"""
+FILES CREATED:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ 16_titanic_dashboard.png      (8-panel overview)
+✅ 17_age_analysis.png            (Age patterns)
+✅ 18_socioeconomic.png           (Class & wealth)
+✅ 19_family_analysis.png         (Family composition)
+
+KEY VISUAL INSIGHTS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 Gender Gap: Women survived at 74% vs men at 19%
+   → Strongest visual pattern in all charts
+
+💰 Class Matters: Clear wealth-survival correlation
+   → 1st class: 63%, 3rd class: 24%
+
+👶 Age Impact: Children had best survival odds
+   → "Women and children first" clearly visible
+
+👨‍👩‍👧‍👦 Family Effect: Small families (2-4) optimal
+   → Solo travelers and large families struggled
+
+🎨 VISUALIZATION TECHNIQUES USED:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✓ Multi-panel dashboards
+✓ Color coding by categories
+✓ Annotations and labels
+✓ Multiple chart types
+✓ Professional styling
+✓ Grid layouts
+
+PORTFOLIO IMPACT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+This visual analysis demonstrates:
+- Data storytelling ability
+- Professional presentation skills
+- Statistical visualization competence
+- Business insight communication
+
+Perfect for showing employers: "I can make data beautiful AND meaningful!"
+""")

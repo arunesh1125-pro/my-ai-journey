@@ -147,3 +147,147 @@ ax8.grid(axis='y', alpha=0.3)
 plt.savefig('16_titanic_dashboard.png', dpi=300, bbox_inches='tight')
 plt.close()
 print("✅ Created: 16_titanic_dashboard.png")
+
+# VISUALIZATION 2: DETAILED AGE ANALYSIS
+
+print("Creating Visualization 2: Age Analysis...")
+
+fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+fig.suptitle('AGE ANALYSIS: "Women and Children First"',
+             fontsize=18, fontweight='bold')
+
+# Age distribution by survival
+axes[0, 0].hist([survived_ages, died_ages], bins=30,
+                label=['Survived', 'Died'],
+                color=['#2ecc71', '#e74c3c'], alpha=0.7, edgecolor='black')
+axes[0, 0].axvline(12, color='purple', linestyle='--', linewidth=2,
+                   label='Child threshold (12)')
+axes[0, 0].set_xlabel('Age', fontweight='bold')
+axes[0, 0].set_ylabel('Count', fontweight='bold')
+axes[0, 0].set_title('Age Distribution', fontweight='bold', fontsize=14)
+axes[0, 0].legend()
+axes[0, 0].grid(axis='y', alpha=0.3)
+
+# Age group survival rates
+age_group_survival = df.groupby('Age_Group', observed=True)['Survived'].mean()
+axes[0, 1].bar(range(len(age_group_survival)), age_group_survival.values,
+               tick_label=age_group_survival.index,
+               color='#3498db', edgecolor='black', linewidth=2)
+axes[0, 1].set_ylabel('Survival Rate', fontweight='bold')
+axes[0, 1].set_title('Survival by Age Group', fontweight='bold', fontsize=14)
+axes[0, 1].set_ylim(0, 1)
+axes[0, 1].grid(axis='y', alpha=0.3)
+for i, v in enumerate(age_group_survival.values):
+    axes[0, 1].text(i, v + 0.02, f'{v:.1%}', ha='center', fontweight='bold')
+
+# Age vs Fare (color by survival)
+survived_mask = df['Survived'] == 1
+axes[1, 0].scatter(df[survived_mask]['Age'], df[survived_mask]['Fare'],
+                   alpha=0.6, s=30, c='#e74c3c', label='Died', edgecolors='black', linewidth=0.5)
+axes[1, 0].set_xlabel('Age', fontweight='bold')
+axes[1, 0].set_ylabel('Fare (£)', fontweight='bold')
+axes[1, 0].set_title('Age vs Fare (by Survival)', fontweight='bold', fontsize=14)
+axes[1, 0].legend()
+axes[1, 0].grid(True, alpha=0.3)
+
+# Age by class and survival
+class_age_survival = df.groupby(['Pclass', pd.cut(df['Age'], bins=[0, 18, 100],
+                                                  labels=['Child/Teen', 'Adult'])])['Survived'].mean().unstack()  # .unstack(): Transforms the data from a long format to a wide format, moving Age Groups into columns to make it suitable for a grouped bar plot.
+class_age_survival.plot(kind='bar', ax=axes[1, 1], color=['#FFB6C1', '#4169E1'],
+                        edgecolor='black', linewidth=2)
+axes[1, 1].set_xlabel('Class', fontweight='bold')
+axes[1, 1].set_ylabel('Survival Rate', fontweight='bold')
+axes[1, 1].set_title('Age Category by Class', fontweight='bold', fontsize=14)
+axes[1, 1].set_xticklabels(['1st', '2nd', '3rd'], rotation=0)
+axes[1, 1].legend(title='Age Group', fontsize=10)
+axes[1, 1].set_ylim(0, 1)
+axes[1, 1].grid(axis='y', alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('17_age_analysis.png', dpi=300, bbox_inches='tight')
+plt.close()
+print("✅ Created: 17_age_analysis.png")
+
+# VISUALIZATION 3l SOCIOECONOMIC ANALYSIS
+
+print("Creating Visualization 3: Socioeconomic Analysis...")
+
+fig = plt.figure(figsize=(16, 10))
+fig.suptitle('SOCIOECONOMIC FACTORS & SURVIVAL', fontsize=18, fontweight='bold')
+
+gs = gridspec.GridSpec(2, 2, figure=fig, hspace=0.3, wspace=0.3) #hpace - vertical gap = 0.3, wspace - horizontal gap = 0.3
+
+# Fare distribution by class
+axs1 = fig.add_subplot(gs[0, 0])
+for pclass in [1, 2, 3]:
+    data = df[df['Pclass'] == pclass]['Fare'].dropna()
+    axs1.hist(data, bins=30, alpha=0.6, label=f'Class {pclass}', edgecolor='black')
+axs1.set_xlabel('Fare  (£)', fontweight='bold', fontsize=12)
+axs1.set_ylabel('Frequency', fontweight='bold', fontsize=12)
+ax1.set_title('Fare Distribution by Class', fontweight='bold', fontsize='14')
+ax1.legend()
+ax1.grid(axis='y', alpha=0.3)
+
+# Class Composition
+axs2 = fig.add_subplot(gs[0, 1])
+class_counts = df['Pclass'].value_counts().sort_index()
+colors_pie = ['#FFD700', '#C0C0C0', '#CD7F32']
+wedges, texts, autotexts = axs2.pie(class_counts, labels=['1st Class', '2nd Class', '3rd Class'],
+                                    colors=colors_pie, autopct='%1.1f%%', startangle=90,
+                                    textprops={'fontweight': 'bold', 'fontsize': 11})
+
+for autotext in autotexts:
+    autotext.set_color('white')
+    autotext.set_fontsize(12)
+axs2.set_title('Passenger Class Distribution', fontweight='bold', fontsize=14)
+
+# Survival rate by fare quartile
+axs3 = fig.add_subplot(gs[1, 0])
+df['Fare_Quartile'] = pd.qcut(df['Fare'].fillna(df['Fare'].median()), 
+                               q=4, labels=['Q1 (Lowest)', 'Q2', 'Q3', 'Q4 (Highest)'])
+quartile_survival = df.groupby('Fare_Quartile', observed=True)['Survived'].mean()
+bars = axs3.bar(range(len(quartile_survival)), quartile_survival.values,
+               tick_label=quartile_survival.index,
+               color=['#e74c3c', '#f39c12', '#3498db', '#2ecc71'],
+               edgecolor='black', linewidth=2)
+axs3.set_ylabel('Survival Rate', fontweight='bold', fontsize=12)
+axs3.set_title('Survival by Fare Quartile', fontweight='bold', fontsize=14)
+axs3.set_ylim(0, 1)
+axs3.grid(axis='y', alpha=0.3)
+for i, v in enumerate(quartile_survival.values):
+    axs3.text(i, v + 0.02, f'{v:.1%}', ha='center', fontweight='bold', fontsize=11)
+
+# Comprehensive class analysis
+axs4 = fig.add_subplot(gs[1, 1])
+class_stats = df.groupby('Pclass').agg({
+    'Survived': 'mean',
+    'Fare': 'median',
+    'Age': 'median'
+})
+
+x = np.arange(3)
+width = 0.25
+
+# Normalize for visibility
+survival_normalized = class_stats['Survived'].values
+fare_normalized = class_stats['Fare'].values / class_stats['Fare'].max()
+age_normalized = class_stats['Age'].values / class_stats['Age'].max()
+
+axs4.bar(x - width, survival_normalized, width, label='Survival Rate',
+        color='#2ecc71', edgecolor='black')
+axs4.bar(x, fare_normalized, width, label='Median Fare (normalized)',
+        color='#3498db', edgecolor='black')
+axs4.bar(x + width, age_normalized, width, label='Median Age (normalized)',
+        color='#f39c12', edgecolor='black')
+
+axs4.set_xlabel('Passenger Class', fontweight='bold', fontsize=12)
+axs4.set_ylabel('Normalized Values', fontweight='bold', fontsize=12)
+axs4.set_title('Class Comparison (Multiple Metrics)', fontweight='bold', fontsize=14)
+axs4.set_xticks(x)
+axs4.set_xticklabels(['1st', '2nd', '3rd'])
+axs4.legend(fontsize=10)
+axs4.grid(axis='y', alpha=0.3)
+
+plt.savefig('18_socioeconomic.png', dpi=300, bbox_inches='tight')
+plt.close()
+print("✅ Created: 18_socioeconomic.png")

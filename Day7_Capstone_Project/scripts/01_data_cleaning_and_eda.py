@@ -191,3 +191,27 @@ for city, revenue in city_revenue.items():
 print("\n" + "="*70)
 print("EDA COMPLETE!")
 print("="*70)
+
+# Save analysis summary
+summary = f"""
+E-COMMERCE ANALYSIS SUMMARY
+{'='*70}
+
+BUSINESS METRICS:
+  Total Revenue:         ₹{total_revenue:,.2f}
+  Total Transactions:    {total_transactions:,}
+  Unique Customers:      {unique_customers:,}
+  Avg Order Value:       ₹{avg_order_value:,.2f}
+  Return Rate:           {df['returned'].mean()*100:.2f}%
+
+TOP CATEGORY: {category_stats.index[0]} (₹{category_stats.iloc[0]['Revenue']:,.2f})
+TOP CITY: {city_revenue.index[0]} (₹{city_revenue.iloc[0]:,.2f})
+BEST SEGMENT: {segment_stats['Revenue'].idxmax()}
+
+Analysis Date: {datetime.now().strftime('%Y-%m-%d %H:%M')}
+"""
+
+with open('../reports/analysis_summary.txt', 'w', encoding='utf-8') as f:
+    f.write(summary)
+
+print("✅ Saved analysis summary")

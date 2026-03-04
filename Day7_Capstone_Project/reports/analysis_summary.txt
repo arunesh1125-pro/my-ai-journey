@@ -1,0 +1,16 @@
+
+E-COMMERCE ANALYSIS SUMMARY
+======================================================================
+
+BUSINESS METRICS:
+  Total Revenue:         ₹266,765,215.79
+  Total Transactions:    14,097
+  Unique Customers:      2,000
+  Avg Order Value:       ₹18,923.55
+  Return Rate:           5.16%
+
+TOP CATEGORY: Electronics (₹164,167,804.60)
+TOP CITY: Mumbai (₹34,565,352.75)
+BEST SEGMENT: Regular
+
+Analysis Date: 2026-03-03 22:04

@@ -166,7 +166,7 @@ print(f"✅ Generated {len(df_transactions):,} transactions")
 print("\nAdding realistic data quality issues...")
 
 # Missing values
-df_transactions.loc[df_transactions.sample(frac=0.03).index, 'rating'] = np.nan
+df_transactions.loc[df_transactions.sample(frac=0.03).index, 'rating'] = np.nan  # .sample() used to pick random pct of rows and set of specific columns to np.nan
 df_transactions.loc[df_transactions.sample(frac=0.01).index, 'delivery_days'] = np.nan
 
 # Duplicates (1% accidental duplicates)

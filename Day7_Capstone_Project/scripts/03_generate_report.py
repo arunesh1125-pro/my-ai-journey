@@ -73,7 +73,7 @@ Unique Customers:           {unique_customers:,}
 Average Order Value:        ₹{avg_order:,.2f}
 Return Rate:                {return_rate:.2f}%
 
-Performance Period:         January - June 2024 (6 months)
+Performance Period:         January - June 2026 (6 months)
 
 {'='*70}
 2. KEY FINDINGS
@@ -209,7 +209,7 @@ The data clearly indicates MARKET READINESS for scaling operations.
 
 Report Prepared By: Data Science Team
 Analysis Date: {datetime.now().strftime('%B %d, %Y')}
-Data Period: January - June 2024
+Data Period: January - June 2026
 Total Records Analyzed: {total_trans:,}
 
 For questions or detailed analysis, contact: analytics@ecommerce.com

@@ -113,7 +113,7 @@ print("Employees OUTER JOIN Departments: ")
 print(outer_join)
 print()
 
- # JOING ON DIFFERENT COLUMNS
+ # JOINING ON DIFFERENT COLUMNS
 
 print("="*70)
 print("JOIN with DIFFERENT COLUMN NAMES")
@@ -134,7 +134,7 @@ print("Employees with Performancer: ")
 print(joined)
 print()
 
- # MULTI-TABLE JOIN (COmmon in real projects!)
+ # MULTI-TABLE JOIN (Common in real projects!)
 
 print("="*70)
 print("MULTI-TABLE JOIN")

@@ -226,3 +226,110 @@ plt.tight_layout()
 plt.savefig('03_marketing_roi_model.png', dpi=300, bbox_inches='tight')
 plt.close()
 print("\n✅ Saved: 03_marketing_roi_model.png")
+
+# EXAMPPLE 2: EMPLOYEE SALARY PREDICTION
+
+print("\n" + "="*70)
+print("EXAMPLE 2: YEARS OF EXPERIENCE → SALARY")
+print("="*70)
+
+# Generate realistic salary data
+np.random.seed(123)
+n_employees = 60
+experience = np.random.uniform(0, 20, n_employees)
+#True realtionship: Salary = 3.5L per year + 4L base + noise
+base_salary = 400000 # ₹4L
+per_year_increment = 350000  # ₹3.5L
+salary = base_salary + per_year_increment * experience + \
+         np.random.normal(0, 80000, n_employees)
+
+# Convert to lakhs for easier reading
+experience_years = experience
+salary_lakhs = salary / 100000
+
+print(f"\nDataset: {n_employees} employee salary records")
+print(f"Experience range: {experience_years.min():.1f} - {experience_years.max():.1f} years")
+print(f"Salary range: ₹{salary_lakhs.min():.2f}L - ₹{salary_lakhs.max():.2f}L")
+# Normalize
+experience_norm = (experience - experience.mean()) / experience.std()
+salary_norm = (salary_lakhs - salary_lakhs.mean()) / salary_lakhs.std()
+
+# Train model
+salary_model = LinearRegressionScratch(learning_rate=0.001, iterations=1000)
+salary_model.fit(experience_norm, salary_norm)
+
+# Convert back to real equation
+m1_final = salary_model.m * (salary_lakhs.std() / experience.std())
+b1_final = salary_lakhs.mean() - m1_final * experience.mean()
+
+print(f"\nTrained Salary Model: ")
+print(f"  Salary (₹L) = {m1_final:.2f} × Years + {b1_final:.2f}")
+print(f"\nHR Insights:")
+print(f"  → Starting salary: ₹{salary_model.b:.2f} lakhs")
+print(f"  → Annual increment: ₹{salary_model.m:.2f} lakhs per year")
+print(f"  → Model accuracy (R²): {salary_model.score(experience_norm, salary_norm):.4f}")
+
+# HR use cases
+candidate_experience = np.array([2, 5, 8, 12, 15])
+predicted_salaries = salary_model.predict(candidate_experience)
+
+print(f"\n{'Salary Benchmarks for HR:':^60}")
+print(f"{'─'*60}")
+print(f"{'Experience (Years)':>20} {'Market Salary (₹L)':>20} {'Annual CTC (₹)':>20}")
+print(f"{'─'*60}")
+for exp, sal in zip(candidate_experience, predicted_salaries):
+    annual_ctc = sal * 100000
+    print(f"{exp:>20.0f} {sal:>20.0f} {annual_ctc:>20.0f}")
+
+# Visualization
+fig, axes = plt.subplots(1, 2, figsize=(14, 6))
+fig.suptitle('Employee Salary Prediction Model', fontsize=16, fontweight='bold')
+
+# Scatter + Line
+axes[0].scatter(experience_norm, salary_norm, alpha=0.6, s=60,
+                color='#3498db', edgecolors='black', label='Employee Data')
+axes[0].plot(experience_norm, salary_model.predict(experience_norm),
+             'r-', linewidth=3, label=f'Model: y={salary_model.m:.2f}x+{salary_model.b:.2f}')
+axes[0].set_xlabel('Years of Experience', fontweight='bold', fontsize=12)
+axes[0].set_ylabel('Salary (₹ lakhs)', fontweight='bold', fontsize=12)
+axes[0].set_title('Experience vs Salary', fontweight='bold', fontsize=14)
+axes[0].legend()
+axes[0].grid(True, alpha=0.3)
+
+#Prediction for candidate
+axes[1].scatter(candidate_experience, predicted_salaries, s=150,
+                color='#2ecc71', edgecolors='black', linewidth=2, 
+                marker='D', label='Salary Predictions', zorder=3)
+axes[1].plot(experience_years, salary_model.predict(experience_years),
+             'b--', linewidth=2, alpha=0.5)
+axes[1].set_xlabel('Years of Experience', fontweight='bold', fontsize=12)
+axes[1].set_ylabel('Predicted Salary (₹ lakhs)', fontweight='bold', fontsize=12)
+axes[1].set_title('HR Salary Benchmarking Tool', fontweight='bold', fontsize=14)
+axes[1].legend()
+axes[1].grid(True, alpha=0.3)
+
+for exp, sal in zip(candidate_experience, predicted_salaries):
+    axes[1].annotate(f'₹{sal:.1f}L', xy=(exp, sal),
+                     xytext=(5, 5), textcoords='offset points',
+                     fontweight='bold', fontsize=9)
+
+plt.tight_layout()
+plt.savefig('04_salary_prediction_model.png', dpi=300, bbox_inches='tight')
+plt.close()
+print("\n✅ Saved: 04_salary_prediction_model.png")
+
+print("\n" + "="*70)
+print("LINEAR REGRESSION FROM SCRATCH: COMPLETE!")
+print("="*70)
+
+print("""
+✅ You just built Linear Regression from first principles!
+
+Key Achievements:
+  → Implemented gradient descent algorithm
+  → Created custom LinearRegression class
+  → Applied to 2 real business problems
+  → Understood mathematics behind the magic
+
+Tomorrow: Use scikit-learn library for production code!
+""")

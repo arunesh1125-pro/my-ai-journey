@@ -209,3 +209,156 @@ axes[1, 1].grid(True, alpha=0.3)
 plt.tight_layout()
 plt.savefig('05_regularization_demo.png', dpi=300, bbox_inches='tight')
 plt.close()
+
+# REAL BUSINESS EXAMPLE: MARKETING WITH REGULARIZATION
+
+print("\n" + "="*70)
+print("REAL EXAMPLE: MARKETING MIX WITH MANY FEATURES")
+print("="*70)
+
+# Generating marketing data with MANY features (some irrelevant)
+np.random.seed(99)
+n = 200
+
+# Relevant features
+tv = np.random.uniform(20, 200, n)
+social = np.random.uniform(10, 100, n)
+email = np.random.uniform(5, 50, n)
+
+# IRRELEVANT features (noise)
+billboard = np.random.uniform(10, 80, n)  # Doesn't affect sales
+print_media = np.random.uniform(5, 60, n) # Doesn't affect sales
+events = np.random.uniform(10, 100, n)    # Doesn't affect sales
+podcast = np.random.uniform(5, 40, n)     # Doesn't affect sales
+
+# True relationship (only TV, Social, Email matter)
+sales = (100 +
+         2.5 * tv +
+         3.0 * social +
+         1.5 * email +
+         np.random.normal(0, 20, n))
+
+# Create DataFrame with ALL features
+df_marketing_full = pd.DataFrame({
+    'TV': tv,
+    'Social': social,
+    'Email': email,
+    'Billboard': billboard,         # NOISE
+    'Print_Media': print_media,     # NOISE
+    'Events': events,               # NOISE
+    'Podcast': podcast,             # NOISE
+    'Sales': sales
+})
+
+print("\nDatset with 7 features (3 relevant, 4 noise): ")
+print(df_marketing_full.head())
+
+# Prepare data
+X_full = df_marketing_full.drop('Sales', axis=1)
+y_full = df_marketing_full['Sales']
+
+# Standardize features (important for regularization!)
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X_full)
+X_scaled_df = pd.DataFrame(X_scaled, columns=X_full.columns)
+
+# Split
+X_train_Sal, X_test_Sal, y_train_Sal, y_test_Sal = train_test_split(
+    X_scaled, y_full, test_size=0.2, random_state=42
+)
+
+# COMPARE: LINEAR vs RIDGE vs LASSO
+
+print("\n" + "="*70)
+print("MODEL COMPARISON: LINEAR vs RIDGE vs LASSO")
+print("="*70)
+
+# Standard Linear Regression
+lr = LinearRegression()
+lr.fit(X_train_Sal, y_train_Sal)
+lr_train = lr.score(X_train_Sal, y_train_Sal)
+lr_test = lr.score(X_test_Sal, y_test_Sal)
+
+# Ridge Regression
+ridger = Ridge(alpha=1.0)
+ridger.fit(X_train_Sal, y_train_Sal)
+ridger_train = ridger.score(X_train_Sal, y_train_Sal)
+ridger_test = ridger.score(X_test_Sal, y_test_Sal)
+
+# Lasso Regression
+Lassor = Lasso(alpha=0.5, max_iter=10000)
+Lassor.fit(X_train_Sal, y_train_Sal)
+Lassor_train = Lassor.score(X_train_Sal, y_train_Sal)
+Lassor_test = Lassor.score(X_test_Sal, y_test_Sal)
+
+# Result
+print(f"\n{'Model':>20} {'Train R²':>12} {'Test R²':>12} {'Overfit Gap':>15}")
+print("-"*65)
+print(f"{'Linear Regression':>20} {lr_train:>12.4f} {lr_test:>12.4f} {lr_train - lr_test:>15.4f}")
+print(f"{'Ridge (α=1.0)':>20} {ridger_train:>12.4f} {ridger_test:12.4f} {ridger_train - ridger_test:>15.4f}")
+print(f"{'Lasso (α=0.5)':>20} {Lassor_train:12.4f} {Lassor_test:12.4f} {Lassor_train - Lassor_test:15.4f}")
+
+print("\n💡 Interpretation:")
+if ridger_test > lr_test:
+    print("  → Ridge performs BETTER than Linear Regression on test data")
+    print("  → Regularization successfully reduced overfitting!")
+
+# FEATURE SELECTION WITH LASSO
+
+print("\n" + "="*70)
+print("LASSO: AUTOMATIC FEATURE SELECTION")
+print("="*70)
+
+# Compare Coefficient
+coef_comparison = pd.DataFrame({
+    'Feature': X_full.columns,
+    'Linear_Coef': lr.coef_,
+    'Ridge_Coef': ridger.coef_,
+    'Lasso_Coef': Lassor.coef_
+})
+
+print("\nCoefficient Comparison: ")
+print(coef_comparison.round(4))
+
+# Count non-zero coefficients in Lasso
+non_zero_lasso = np.sum(np.abs(Lassor.coef_) > 0.01)
+print(f"\nLasso selected {non_zero_lasso} out of {len(X_full.columns)} features")
+
+#Identify eliminated feature
+eliminated = coef_comparison[np.abs(coef_comparison['Lasso_Coef']) < 0.01]['Feature'].tolist()
+if eliminated:
+    print(f"Features eliminated by Lasso: {eliminated}")
+    print("→ These features had little predictive power (likely noise!)")
+
+# VISUALIZE COEFFICIENTS
+
+fig, axes = plt.subplots(1, 3, figsize=(16, 5))
+fig.suptitle('COEFFICIENT COMPARISON: LINEAR vs RIDGE vs LASSO',
+             fontsize=16, fontweight='bold')
+
+# Linear coefficients
+axes[0].barh(X_full.columns, lr.coef_, color='#3498db', edgecolor='black')
+axes[0].set_xlabel('Coefficient Value', fontweight='bold')
+axes[0].set_title('Linear Regression\n(No Regularization)', fontweight='bold', fontsize=13)
+axes[0].grid(axis='x', alpha=0.3)
+axes[0].axvline(x=0, color='black', linewidth=1)
+
+# Ridge Coefficients
+axes[1].barh(X_full.columns, ridger.coef_, color='purple', edgecolor='black')
+axes[1].set_xlabel('Coefficient Value', fontweight='bold')
+axes[1].set_title('Ridge Regression\n(L2: Shrinks all coefficients)', fontweight='bold', fontsize=13)
+axes[1].grid(axis='x', alpha=0.3)
+axes[1].axvline(x=0, color='black', linewidth=1)
+
+# Lasso Coefficients
+colors = ['#2ecc71' if abs(c) > 0.01 else '#e74c3c' for c in lasso.coef_]
+axes[2].barh(X_full.columns, Lassor.coef_, color=colors, edgecolor='black')
+axes[2].set_xlabel('Coefficient Value', fontweight='bold')
+axes[2].set_title('Lasso Regression\n(L1: Sets some to ZERO)', fontweight='bold', fontsize=13)
+axes[2].grid(axis='x', alpha=0.3)
+axes[2].axvline(x=0, color='black', linewidth=1)
+
+plt.tight_layout()
+plt.savefig('06_coefficient_comparison.png', dpi=300, bbox_inches='tight')
+plt.close()
+print("\n✅ Saved: 06_coefficient_comparison.png")

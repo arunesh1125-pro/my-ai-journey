@@ -229,8 +229,8 @@ for (feature, pos) in zip(features_to_plot, positions):
     ax.scatter(df_marketing[feature], df_marketing['Sales'], 
                alpha=0.5, s=40, color='#9b59b6', edgecolors='black', linewidths=0.5)
     # Add trend line
-    z = np.polyfit(df_marketing[feature], df_marketing['Sales'], 1)
-    p = np.poly1d(z)
+    z = np.polyfit(df_marketing[feature], df_marketing['Sales'], 1) # Calculate the line of best fit (slope and intercept)
+    p = np.poly1d(z) # Turns those calculations into function
     ax.plot(df_marketing[feature].sort_values(), 
             p(df_marketing[feature].sort_values()), 
             "r-", linewidth=2, alpha=0.7)
@@ -257,4 +257,206 @@ print("\n✅ Saved: 02_marketing_mix_model.png")
 
 print("\n" + "="*70)
 print("PROJECT 1 COMPLETE: Marketing Mix Model")
+print("="*70)
+
+# PROJECT 2: ADVANCED SALARY PREDICTOR
+
+print("\n" + "="*70)
+print("PROJECT 2: ADVANCED EMPLOYEE SALARY PREDICTOR")
+print("Features: Experience, Education, City, Skills")
+print("="*70)
+
+# Generate realistic data
+np.random.seed(123)
+n_employees = 500
+
+# Features
+experience = np.random.uniform(0, 20, n_employees)
+education = np.random.choice([12, 15, 16, 18, 21], n_employees) # Years of eduction
+city_tier = np.random.choice([1, 2, 3], n_employees, p=[0.3, 0.4, 0.3])
+skill_score = np.random.uniform(40, 100, n_employees)  # Technical assessment score
+
+# Salary formula (complex real-world relationship)
+base_salary = 400000  # ₹4L base
+
+# Experience factor (diminishing returns)
+exp_factor = 350000 * experience * (1 - 0.02 * experience)
+
+# Education premium
+edu_premium = {12:0, 15: 50000, 16: 100000, 18: 200000, 21: 400000}
+edu_factor = np.array([edu_premium[e] for e in education])
+
+# City cost of living adjustment
+city_factor = {1: 200000, 2: 100000, 3: 0}  # Tier 1/2/3 cities
+city_adj = np.array([city_factor[c] for c in city_tier])
+
+# Skills premium
+skill_factor = skill_score * 5000
+
+# Final salary with noise
+salary = (base_salary + exp_factor + edu_factor + city_adj + skill_factor +
+          np.random.normal(0, 80000, n_employees))
+
+# Convert to lakhs
+salary_lakhs = salary / 100000
+
+# Create DataFrame
+df_salary = pd.DataFrame({
+    'Experience_Years': experience,
+    'Education_Years': education,
+    'City_Tier': city_tier,
+    'Skill_Score': skill_score,
+    'Salary_Lakhs': salary_lakhs
+})
+
+print("\n📊 Employee Dataset Overview:")
+print(df_salary.head(10))
+print(f"\nDataset shape: {df_salary.shape}")
+print("\nSalary Statistics:")
+print(df_salary['Salary_Lakhs'].describe().round(2))
+
+# Correlations
+print("\n📈 Feature Correlations:")
+print(df_salary.corr()['Salary_Lakhs'].sort_values(ascending=False).round(3))
+
+# Prepare data
+X_Salary = df_salary[['Experience_Years', 'Education_Years', 'City_Tier', 'Skill_Score']]
+y_Salary = df_salary['Salary_Lakhs']
+
+# Split
+X_train_sal, X_test_sal, y_train_sal, y_test_sal = train_test_split(
+    X_Salary, y_Salary, test_size=0.2, random_state=42
+)
+
+# Train model
+model_salary = LinearRegression()
+model_salary.fit(X_train_sal, y_train_sal)
+
+# Predict
+y_pred_sal = model_salary.predict(X_test_sal)
+
+# Evaluate
+r2_sal = r2_score(y_test_sal, y_pred_sal)
+rmse_sal = np.sqrt(mean_squared_error(y_test_sal, y_pred_sal))
+mae_sal = mean_absolute_error(y_test_sal, y_pred_sal)
+
+print("\n" + "="*70)
+print("MODEL PERFORMANCE")
+print("="*70)
+print(f"R² Score:      {r2_sal:.4f}")
+print(f"RMSE:          ₹{rmse_sal:.2f} lakhs")
+print(f"MAE:           ₹{mae_sal:.2f} lakhs")
+
+# Feature importance
+print("\n" + "="*70)
+print("SALARY FACTORS ANALYSIS")
+print("="*70)
+
+salary_factors = pd.DataFrame({
+    'Factor': X_Salary.columns,
+    'Impact_Per_Unit': model_salary.coef_
+}).sort_values('Impact_Per_Unit', ascending=False)
+
+print(f"\nBase Salary: ₹{model_salary.intercept_:.2f} lakhs")
+print(f"\n{'Factor':>20} {'Impact per Unit'}:>20")
+print("-"*45)
+for idx, row in salary_factors.iterrows():
+    print(f"{row['Factor']:>20} ₹{row['Impact_Per_Unit']:>19.2f}L")
+
+print("\n💡 Interpretation:")
+print(f"  → Each year of experience: +₹{salary_factors[salary_factors['Factor']=='Experience_Years']['Impact_Per_Unit'].values[0]:.2f}L")
+print(f"  → Each year of education: +₹{salary_factors[salary_factors['Factor']=='Education_Years']['Impact_Per_Unit'].values[0]:.2f}L")
+print(f"  → Each skill point: +₹{salary_factors[salary_factors['Factor']=='Skill_Score']['Impact_Per_Unit'].values[0]:.3f}L")
+print(f"  → City tier impact: +₹{salary_factors[salary_factors['Factor']=='City_Tier']['Impact_Per_Unit'].values[0]:.2f}L per tier")
+
+# HR Use Cases
+print("\n" + "="*70)
+print("HR USE CASES: SALARY PREDICTIONS")
+print("="*70)
+
+candidates = pd.DataFrame({
+    'Experience_Years': [2, 5, 8, 12, 15],
+    'Education_Years': [16, 18, 16, 21, 18],
+    'City_Tier': [1, 1, 2, 1, 2],
+    'Skill_Score': [65, 75, 82, 90, 88]
+})
+
+predicted_salaries = model_salary.predict(candidates)
+
+print(f"\n{'Profile':^80}")
+print("="*80)
+print(f"{'Exp':>5} {'Edu':>5} {'City':>6} {'Skills':>8} | {'Predicted Salary':>20} {'Annual CTC':>15}")
+print("-"*80)
+for i, pred in enumerate(predicted_salaries):
+    annual_ctc = pred * 100000
+    print(f"{candidates.iloc[i]['Experience_Years']:>5.0f}"
+          f"{candidates.iloc[i]['Education_Years']:>5.0f}"
+          f"{'T'+str(int(candidates.iloc[i]['City_Tier'])):>6}"
+          f"{candidates.iloc[i]['Skill_Score']:>8.0f} | "
+          f"₹{pred:>19.2f}L "
+          f"₹{annual_ctc:>14,.0f}")
+    
+# Visualization
+fig, axes = plt.subplots(2, 3, figsize=(16, 10))
+fig.suptitle('EMPLOYEE SALARY PREDICTION MODEL', fontsize=16, fontweight='bold')
+
+# Actual vs Predicted
+axes[0, 0].scatter(y_test_sal, y_pred_sal, alpha=0.6, s=60,
+                   color='#3498db', edgecolors='black')
+axes[0, 0].plot([y_test_sal.min(), y_test_sal.max()],
+                [y_test_sal.min(), y_test_sal.max()],
+                'r--', linewidth=2)
+axes[0, 0].set_xlabel('Actual Salary (₹L)', fontweight='bold')
+axes[0, 0].set_ylabel('Predicted Salary (₹L)', fontweight='bold')
+axes[0, 0].set_title(f'Model Accuracy (R²={r2_sal:.3f})', fontweight='bold')
+axes[0, 0].grid(True, alpha=0.3)
+
+# Experience impact
+axes[0, 1].scatter(df_salary['Experience_Years'], df_salary['Experience_Years'],
+                   alpha=0.5, s=40, color='#2ecc71', edgecolors='black', linewidths=0.5)
+axes[0, 1].set_xlabel('Experience (Years)', fontweight='bold')
+axes[0, 1].set_ylabel('Salary (₹L)', fontweight='bold')
+axes[0, 1].set_title('Experience Impact', fontweight='bold')
+axes[0, 1].grid(True, alpha=0.3)
+
+# Education Impact
+edu_salary = df_salary.groupby('Education_Years')['Salary_Lakhs'].mean().sort_index()
+axes[0, 2].bar(edu_salary.index, edu_salary.values, color='#e74c3c', 
+               edgecolor='black', linewidth=1.5)
+axes[0, 2].set_xlabel('Education (Years)', fontweight='bold')
+axes[0, 2].set_ylabel('Avg Salary (₹L)', fontweight='bold')
+axes[0, 2].set_title('Education Premium', fontweight='bold')
+axes[0, 2].grid(axis='y', alpha=0.3)
+
+#City tier comparison
+city_salary = df_salary.groupby('City_Tier')['Salary_Lakhs'].mean()
+axes[1, 0].bar(['Tier 1', 'Tier 2', 'Tier 3'], city_salary.values,
+               color=['#FFD700', '#C0C0C0', '#CD7F32'], edgecolor='black', linewidth=1.5)
+axes[1, 0].set_ylabel('Avg Salary (₹L)', fontweight='bold')
+axes[1, 0].set_title('City Tier Impact', fontweight='bold')
+
+# Skills impact
+axes[1, 1].scatter(df_salary['Skill_Score'], df_salary['Salary_Lakhs'],
+                   alpha=0.5, s=40, color='#9b59b6', edgecolors='black', linewidths=0.5)
+axes[1, 1].set_xlabel('Skill Score', fontweight='bold')
+axes[1, 1].set_ylabel('Salary (₹L)', fontweight='bold')
+axes[1, 1].set_title('Skills Premium', fontweight='bold')
+axes[1, 1].grid(True, alpha=0.3)
+
+# Feature importance
+axes[1, 2].barh(salary_factors['Factor'], np.abs(salary_factors['Impact_Per_Unit']),
+                color='#3498db', edgecolor='black', linewidth=1.5)
+axes[1, 2].set_xlabel('Impact (₹L per unit)', fontweight='bold')
+axes[1, 2].set_title('Feature Importance', fontweight='bold')
+axes[1, 2].grid(axis='x', alpha=0.3)
+
+plt.tight_layout()
+plt.savefig('03_salary_prediction_advanced.png', dpi=300, bbox_inches='tight')
+plt.close()
+print("\n✅ Saved: 03_salary_prediction_advanced.png")
+
+print("\n" + "="*70)
+print("PROJECT 2 COMPLETE: Advanced Salary Predictor")
+print("="*70)
+print("\nMULTIPLE LINEAR REGRESSION MASTERED!")
 print("="*70)

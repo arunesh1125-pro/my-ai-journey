@@ -324,7 +324,7 @@ print(coef_comparison.round(4))
 non_zero_lasso = np.sum(np.abs(Lassor.coef_) > 0.01)
 print(f"\nLasso selected {non_zero_lasso} out of {len(X_full.columns)} features")
 
-#Identify eliminated feature
+# Identify eliminated feature
 eliminated = coef_comparison[np.abs(coef_comparison['Lasso_Coef']) < 0.01]['Feature'].tolist()
 if eliminated:
     print(f"Features eliminated by Lasso: {eliminated}")
@@ -362,3 +362,106 @@ plt.tight_layout()
 plt.savefig('06_coefficient_comparison.png', dpi=300, bbox_inches='tight')
 plt.close()
 print("\n✅ Saved: 06_coefficient_comparison.png")
+
+# HYPERPARAMETER TUNNING
+
+print("\n" + "="*70)
+print("HYPERPARAMETER TUNING: FINDING OPTIMAL ALPHA")
+print("="*70)
+
+alphas_grid = np.logspace(-3, 3, 50)  # 0.001 to 1000
+ridge_cv_scores = []
+lasso_cv_scores = []
+
+print("Testing 50 different alpha values")
+
+for alpha in alphas_grid:
+    # Ridge with cross-validation
+    ridge_model = Ridge(alpha=alpha)
+    ridge_scores = cross_val_score(ridge_model, X_train_Sal, y_train_Sal,
+                                   cv=5, scoring='r2')
+    ridge_cv_scores.append(ridge_scores.mean())
+
+    # Lasso with cross-validation
+    lasso_model = Lasso(alpha=alpha, max_iter=10000)
+    lasso_scores = cross_val_score(lasso_model, X_train_Sal, y_train_Sal,
+                                   cv=5, scoring='r2')
+    lasso_cv_scores.append(lasso_scores.mean())
+
+# Find best alphas
+best_ridge_idx = np.argmax(ridge_cv_scores)
+best_lasso_idx = np.argmax(lasso_cv_scores)
+
+best_ridge_alpha = alphas_grid[best_ridge_idx]
+best_lasso_alpha = alphas_grid[best_lasso_idx]
+
+print(f"\n✅ OPTIMAL HYPERPARAMETERS:")
+print(f"   Ridge best alpha: {best_ridge_alpha:.4f} (CV  R² = {ridge_cv_scores[best_ridge_idx]:.4f})")
+print(f"   Lasso best alpha: {best_lasso_alpha:.4f} (CV R² = {lasso_cv_scores[best_lasso_idx]:.4f})")
+
+# Train final models with best alphas
+final_ridge = Ridge(alpha=best_ridge_alpha)
+final_ridge.fit(X_train_Sal, y_train_Sal)
+
+final_lasso = Lasso(alpha=best_lasso_alpha, max_iter=10000)
+final_lasso.fit(X_train_Sal, y_train_Sal)
+
+# Evaluate on test set
+print(f"\n📊 FINAL TEST PERFORMANCE:")
+print(f" Ridge: R² = {final_ridge.score(X_test_Sal, y_test_Sal):.4f}")
+print(f" Lasso: R² = {final_lasso.score(X_test_Sal, y_test_Sal):.4f}")
+
+# Visualize hyperparameter tunning
+plt.figure(figsize=(12, 6))
+plt.plot(alphas_grid, ridge_cv_scores, 'o-', linewidth=2, markersize=5,
+         label='Ridge', color='purple')
+plt.plot(alphas_grid, lasso_cv_scores, 's-', linewidth=2, markersize=5,
+         label='Lasso', color='orange')
+plt.axvline(x=best_ridge_alpha, color='purple', linestyle='--',
+            linewidth=2, alpha=0.5, label=f'Best Ridge α={best_ridge_alpha:.3f}')
+plt.axvline(x=best_lasso_alpha, color='orange', linestyle='--',
+            linewidth=2, alpha=0.5, label=f'Best Lasso α={best_lasso_alpha:.3f}')
+plt.xscale('log')
+plt.xlabel('Alpha (Regularization Strength)', fontweight='bold', fontsize=12)
+plt.ylabel('Cross-Validation R² Score', fontweight='bold', fontsize=12)
+plt.title('Hyperparameter Tuning: Finding Optimal Alpha', fontweight='bold', fontsize=14)
+plt.legend(fontsize=11)
+plt.grid(True, alpha=0.3)
+plt.savefig('07_hyperparameter_tuning.png', dpi=300, bbox_inches='tight')
+plt.close()
+print("\n✅ Saved: 07_hyperparameter_tuning.png")
+
+# BUSINESS RECOMMENDATIONS
+
+print("\n" + "="*70)
+print("💡 BUSINESS INSIGHTS FROM REGULARIZATION")
+print("="*70)
+
+# Get important features from Lasso
+important_features = coef_comparison[
+    np.abs(coef_comparison['Lasso_Coef']) > 0.01
+].sort_values('Lasso_Coef', ascending=False)
+
+print(f"""
+MARKETING CHANNEL OPTIMIZATION:
+{'─'*50}
+
+Channels Worth Investing In:
+{chr(10).join([f'  ✅ {row["Feature"]}: ROI coefficient = {row["Lasso_Coef"]:.3f}' 
+               for _, row in important_features.iterrows()])}
+
+Channels to REDUCE/ELIMINATE:
+{chr(10).join([f'  ❌ {feat}: No measurable impact on sales' 
+               for feat in eliminated])}
+
+RECOMMENDATION:
+→ Reallocate budget from eliminated channels to high-ROI channels
+→ Expected impact: {((Lassor_test - 0.5) * 100):.0f}% improvement in prediction accuracy
+→ Model confidence: R² = {Lassor_test:.2%}
+
+""")
+
+
+print("="*70)
+print("PROJECT 3 COMPLETE: REGULARIZATION MASTERED!")
+print("="*70)

@@ -110,9 +110,9 @@ y_fill_upper = np.array([y_boundary[0], y_boundary[-1], X[:, 1].max(), X[:, 1].m
                                                                                                                                                                                       #  /________/
                                                                                                                                                                                                                                                                                                                                                                
 # Lower Region Coordinates
-y_fill_lower = np.array([X[:, 1].min(), X[:, 1].min(), y_boundary[0], y_boundary[-1]]) # This defines the area are BELOW the boundary. This region will be predicted as Class 0Eg:  ________
-                                                                                                                                                                                #  /       /
-                                                                                                                                                                                #  \______/
+y_fill_lower = np.array([X[:, 1].min(), X[:, 1].min(), y_boundary[0], y_boundary[-1]]) # This defines the area are BELOW the boundary. This region will be predicted as Class 0. Eg:  ________
+                                                                                                                                                                                  #  /       /
+                                                                                                                                                                                  #  \______/
 
 # Fill Upper Region (Class 1)
 axes[1].fill(x_fill, y_fill_upper, alpha=0.2, color='red', label='Predict: Class 1') # Color the upper region are with light red. Meaning: Model prediction here -> Class 1

@@ -255,3 +255,153 @@ Scenario 4: Marketing Campaign
   Trade-off: Miss some potential customers
 """)
 
+# VISUALIZATIONS
+
+fig = plt.figure(figsize=(16, 12))
+gs = fig.add_gridspec(3, 3, hspace=0.35, wspace=0.35)
+
+# Plot 1: Confusion Matrix Heatmap
+ax1 = fig.add_subplot(gs[0, 0])
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', cbar=False,
+            xticklabels=['Repay (0)', 'Default (1)'],
+            yticklabels=['Repay (0)', 'Default (1)'],
+            ax=ax1, annot_kws={'size': 14, 'weight': 'bold'})
+ax1.set_ylabel('Actual', fontweight='bold', fontsize=12)
+ax1.set_xlabel('Predicted', fontweight='bold', fontsize=12)
+ax1.set_title('Confusion Matrix', fontweight='bold', fontsize=14)
+
+# Add labels
+ax1.text(0.5, 0.25, f'TN\n{tn}', ha='center', va='center',
+         fontsize=10, color='darkblue', weight='bold')
+ax1.text(1.5, 0.25, f'FP\n{fp}', ha='center', va='center',
+         fontsize=10, color='darkred', weight='bold')
+ax1.text(0.5, 1.25, f'FN\n{fn}', ha='center', va='center',
+         fontsize=10, color='darkred', weight='bold')
+ax1.text(1.5, 1.25, f'TP\n{tp}', ha='center', va='center',
+         fontsize=10, color='darkblue', weight='bold')
+
+# Plot 2: Metrics Comparison
+ax2 = fig.add_subplot(gs[0, 1])
+metrics = ['Accuracy', 'Precision', 'Recall', 'F1-Score', 'ROC-AUC']
+values = [accuracy, precision, recall, f1, roc_auc]
+colors = ['#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6']
+bars = ax2.barh(metrics, values, color=colors, edgecolor='black', linewidth=2)
+ax2.set_xlim(0, 1)
+ax2.set_xlabel('Score', fontweight='bold', fontsize=12)
+ax2.set_title('All Metrics Comparison', fontweight='bold', fontsize=14)
+ax2.grid(axis='x', alpha=0.3)
+for i, v in enumerate(values):
+    ax2.text(v + 0.02, i, f'{v:.3f}', va='center', fontweight='bold', fontsize=11)
+
+# Plot 3: ROC Curve
+ax3 = fig.add_subplot(gs[0, 2])
+fpr, tpr, threshold_roc = roc_curve(y_test, y_pred_proba)
+ax3.plot(fpr, tpr, linewidth=3, color='#2ecc71', label=f'ROC (AUC={roc_auc:.3f})')
+ax3.plot([0, 1], [0, 1], 'k--', linewidth=2, label='Random Classifier', alpha=0.5)
+ax3.fill_between(fpr, tpr, alpha=0.3, color='#2ecc71')
+ax3.set_xlabel('False Positive Rate', fontweight='bold', fontsize=12)
+ax3.set_ylabel('True Positive Rate (Recall)', fontweight='bold', fontsize=12)
+ax3.set_title('ROC Curve', fontweight='bold', fontsize=14)
+ax3.legend(fontsize=11)
+ax3.grid(True, alpha=0.3)
+
+# Plot 4: Precision-Recall Curve
+ax4 = fig.add_subplot(gs[1, 0])
+precisions, recalls, thresholds_pr = precision_recall_curve(y_test, y_pred_proba)
+ax4.plot(recalls, precisions, linewidth=3, color='#e74c3c')
+ax4.set_xlabel('Recall', fontweight='bold', fontsize=12)
+ax4.set_ylabel('Precision', fontweight='bold', fontsize=12)
+ax4.set_title('Precision-Recall Curve', fontweight='bold', fontsize=14)
+ax4.grid(True, alpha=0.3)
+ax4.fill_between(recalls, precisions, alpha=0.3, color='#e74c3c')
+
+# Plot 5: Threshold Impact
+ax5 = fig.add_subplot(gs[1, 1:])
+thresholds_test = np.linspace(0, 1, 100)
+precisions_list = []
+recalls_list = []
+f1_scores_list = []
+
+for thresh in thresholds_test:
+    y_pred_thresh = (y_pred_proba >= thresh).astype(int)
+    if y_pred_thresh.sum() > 0: # Avoid division by zero
+        p = precision_score(y_test, y_pred_thresh, zero_division=0)
+        r = recall_score(y_test, y_pred_thresh, zero_division=0)
+        f = f1_score(y_test, y_pred_thresh, zero_division=0)
+    else:
+        p, r, f = 0, 0, 0
+    precisions_list.append(p)
+    recalls_list.append(r)
+    f1_scores_list.append(f1)
+
+ax5.plot(thresholds_test, precisions_list, linewidth=2, label='Precision', color='#3498db')
+ax5.plot(thresholds_test, recalls_list, linewidth=2, label='Recall', color='#e74c3c')
+ax5.plot(thresholds_test, f1_scores_list, linewidth=2, label='F1-Score', color='#2ecc71')
+ax5.axvline(x=0.5, color='black', linestyle='--', linewidth=2, alpha=0.5, label='Default (0.5)')
+ax5.set_xlabel('Decision Threshold', fontweight='bold', fontsize=12)
+ax5.set_ylabel('Score', fontweight='bold', fontsize=12)
+ax5.set_title('Impact of Threshold on Metrics', fontweight='bold', fontsize=14)
+ax5.legend(fontsize=11)
+ax5.grid(True, alpha=0.3)
+
+# Plot 6: Probablity Distribution
+ax6 = fig.add_subplot(gs[2, 0])
+ax6.hist(y_pred_proba[y_test==0], bins=30, alpha=0.6, label='Actual: Repay',
+         color='blue', edgecolor='black')
+ax6.hist(y_pred_proba[y_test==1], bins=30, alpha=0.6, label='Actual: Default',
+         color='red', edgecolor='black')
+ax6.axvline(x=0.5, color='black', linestyle='--', linewidth=2, label='Threshold (0.5)')
+ax6.set_xlabel('Predicted Probability', fontweight='bold', fontsize=12)
+ax6.set_ylabel('Frequency', fontweight='bold', fontsize=12)
+ax6.set_title('Probability Distribution by Class', fontweight='bold', fontsize=14)
+ax6.legend(fontsize=10)
+ax6.grid(axis='y', alpha=0.3)
+
+# Plot 7: Classification Report as Tables
+ax7 =fig.add_subplot(gs[2, 1:])
+ax7.axis('off')
+
+report = classification_report(y_test, y_pred, target_names=['Repay', 'Default'],
+                               output_dict=True)
+report_df = pd.DataFrame(report).T
+
+# Create table
+table_data = []
+for idx, row in report_df.iterrows():
+    if idx in ['Repay', 'Default', 'accuracy', 'macro avg', 'weighted avg']:
+        if idx == 'accuracy':
+            table_data.append([idx, '', '', f"{row['precision']:.3f}", ''])
+        else:
+            table_data.append([
+                idx, 
+                f"{row.get('precision', 0):.3f}",
+                f"{row.get('recall', 0):.3f}",
+                f"{row.get('f1-score', 0):.3f}",
+                f"{int(row.get('support', 0))}" if 'support' in row else ''
+            ])
+
+table = ax7.table(cellText=table_data,
+                  colLabels=['Class', 'Precision', 'Recall', 'F1-Score', 'Support'],
+                  cellLoc='center',
+                  loc='center',
+                  bbox=[0, 0, 1, 1])
+table.auto_set_font_size(False)
+table.set_fontsize(10)
+table.scale(1, 2)
+
+# Style header
+for i in range(5):
+    table[(0, i)].set_facecolor('#3498db')
+    table[(0, i)].set_text_props(weight='bold', color='white')
+
+ax7.set_title('Classification Report', fontweight='bold', fontsize=14, pad=20)
+plt.suptitle('COMPREHENSIVE CLASSIFICATION METRICS DASHBOARD', 
+             fontsize=16, fontweight='bold', y=0.995)
+
+plt.savefig('04_classification_metrics_dashboard.png', dpi=300, bbox_inches='tight')
+plt.close()
+print("\n✅ Saved: 04_classification_metrics_dashboard.png")
+
+print("\n" + "="*70)
+print("CLASSIFICATION METRICS COMPLETE!")
+print("="*70)

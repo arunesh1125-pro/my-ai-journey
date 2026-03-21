@@ -130,3 +130,236 @@ df = pd.DataFrame({
 print(f"✅ Generated dataset: {len(df)} customers")
 print(f"\nFirst 10 rows:")
 print(df.head(10))
+
+# EXPLORATORY DATA ANALYSIS
+
+print("\n" + "="*70)
+print("STEP 2: EXPLORATORY DATA ANALYSIS")
+print("="*70)
+
+print(f"\n📊 Dataset Overview:")
+print(f"  Total customers: {len(df):,}")
+print(f"  Features: {df.shape[1] - 2}")  # Exclude CustomerID and target
+
+print(f"\n📈 Churn Statistics:")
+churn_counts = df['Churned'].value_counts()
+churn_rate = df['Churned'].mean()
+print(f"    Stayed (0): {churn_counts[0]:,} ({(1-churn_rate)*100:.1f}%)")
+print(f"    Churned (1): {churn_counts[1]:,} ({churn_rate*100:.1f}%)")
+print(f"    Overall churn rate: {churn_rate:.1%}")
+
+if churn_rate < 0.3:
+    print(f"  ⚠️  Slightly imbalanced (but manageable)")
+
+print(df.describe().round(2))
+
+print(f"\n🔍 Churn Analysis by Key Features:")
+
+# Tenure vs Churn
+tenure_churn = df.groupby(pd.cut(df['Tenure_Months'], bins=[0, 12, 24, 36, 100]))['Churned'].mean()
+for tenure_bin, rate in tenure_churn.items():
+    print(f"    {tenure_bin}: {rate:.1%}")
+
+# Contract vs Churn
+contract_names = {0: 'Month-to-Month', 1: 'One year', 2: 'Two year'}
+contract_churn = df.groupby('Contract')['Churned'].mean()
+print(f"\nChurn Rate by Contract")
+for contract, rate in contract_churn.items():
+    print(f"    {contract_names[contract]}: {rate:.1%}")
+
+# Monthly charges vs Churn
+df['Charge_Tier'] = pd.qcut(df['MonthlyCharges'], q=4, labels=['Low', 'Medium', 'High', 'Very High'])
+charge_churn = df.groupby('Charge_Tier')['Churned'].mean()
+print(f"\nChurn Rate by Monthly Charges:")
+for tier, rate in charge_churn.items():
+    print(f"    {tier}: {rate:.1%}")
+
+# FEATURE ENGINEERING
+
+print("\n" + "="*70)
+print("STEP 3: FEATURE ENGINEERING")
+print("="*70)
+
+# Create new features
+df['ChargesPerMonth'] = df['TotalCharges'] / (df['Tenure_Months'] + 1)  # Avoid division by zero
+df['LongTermCustomer'] = (df['Tenure_Months'] >= 24).astype(int)
+df['HighValue'] = (df['MonthlyCharges'] >= 70).astype(int)
+df['HasSupport'] = (df['OnlineSecurity'] == 1) | (df['TechSupport'] == 1).astype(int)
+
+# One-hot encode gender
+df['Gender_Male'] = (df['Gender'] == 'Male').astype(int)
+
+print("✅ Created new features:")
+print("  • ChargesPerMonth: Monthly spending rate")
+print("  • LongTermCustomer: Tenure >= 24 months")
+print("  • HighValue: Monthly charges >= ₹70")
+print("  • HasSupport: Has any support service")
+print("  • Gender_Male: Binary gender encoding")
+
+# PREPARE FOR DATA MODELING
+
+print("\n" + "="*70)
+print("STEP 4: DATA PREPARATION")
+print("="*70)
+
+# Select features
+feature_cols = [
+    'Age', 'SeniorCitizen', 'Gender_Male', 'Tenure_Months',
+    'PhoneService', 'MultipleLines', 'InternetService',
+    'OnlineSecurity', 'TechSupport', 'Contract',
+    'PaperlessBilling', 'PaymentMethod', 'MonthlyCharges',
+    'TotalCharges', 'ChargesPerMonth', 'LongTermCustomer',
+    'HighValue', 'HasSupport'
+]
+
+X = df[feature_cols].values
+y = df['Churned'].values
+
+print(f"Feature selected: {len(feature_cols)}")
+print(f"Feature names: {feature_cols}")
+
+# Split data
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42, stratify=y
+)
+
+print(f"\nTrain set: {len(X_train)} customers")
+print(f"Test set:  {len(X_test)} customers")
+
+# Standardize features
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+print("✅ Features standardized (mean=0, std=1)")
+
+# MODEL TRAINING
+
+print("\n" + "="*70)
+print("STEP 5: MODEL TRAINING")
+print("="*70)
+
+# Train Logistic Regression
+model = LogisticRegression(max_iter=1000, random_state=42)
+model.fit(X_train_scaled, y_train)
+
+print("✅ Logistic Regression model trained!")
+
+# Feature inportance (coefficients)
+feature_importance = pd.DataFrame({
+    'Feature': feature_cols,
+    'Coefficient': model.coef_[0],
+    'Abs_Coefficient': np.abs(model.coef_[0])
+}).sort_values('Abs_Coefficient', ascending=False)
+
+print(f"\n📊 Top 10 Most Important Features:")
+print(f"{'Feature':>25} {'Coefficient':>15} {'Impact':>15}")
+print("-"*60)
+for idx, row in feature_importance.head(10).iterrows():
+    impact = 'Increase Churn' if row['Coefficient'] > 0 else 'Reduce Churn'
+    print(f"{row['Feature']:>25} {row['Coefficient']:>15.4f} {impact:>15}")
+
+# MODEL EVALUATION
+
+print("\n" + "="*70)
+print("STEP 6: MODEL EVALUATION")
+print("="*70)
+
+# Predictions
+y_pred = model.predict(X_test_scaled)
+y_pred_proba = model.predict_proba(X_test_scaled)[:, 1]
+
+# Metrics
+accuracy = accuracy_score(y_test, y_pred)
+precision = precision_score(y_test, y_pred)
+recall = recall_score(y_test, y_pred)
+f1 = f1_score(y_test, y_pred)
+roc_auc = roc_auc_score(y_test, y_pred_proba)
+
+# Confusion Matrix
+cm = confusion_matrix(y_test, y_pred)
+tn, fp, fn, tp = cm.ravel()
+
+print(f"\n🎯 MODEL PERFORMANCE:")
+print(f"{'─'*50}")
+print(f"Accuracy:  {accuracy:.1%}")
+print(f"Precision: {precision:.1%}")
+print(f"Recall:    {recall:.1%} ← KEY METRIC (catch churners)")
+print(f"F1-Score:  {f1:.3f}")
+print(f"ROC-AUC:   {roc_auc:.3f}")
+
+print(f"\n📋 Confusion Matrix:")
+print(f"                PREDICTED")
+print(f"              ┌─────────┬─────────┐")
+print(f"              │ Stay (0)│Churn (1)│")
+print(f"    ┌─────────┼─────────┼─────────┤")
+print(f"  A │ Stay    │  {tn:>5}  │  {fp:>5}  │")
+print(f"  C │  (0)    │  (TN)   │  (FP)   │")
+print(f"  T ├─────────┼─────────┼─────────┤")
+print(f"  U │ Churn   │  {fn:>5}  │  {tp:>5}  │")
+print(f"  A │  (1)    │  (FN)   │  (TP)   │")
+print(f"  L └─────────┴─────────┴─────────┘")
+
+print(f"\nInterpretation:")
+print(f"  ✅ Correctly identified {tp} churners (True Positives)")
+print(f"  ✅ Correctly identified {tn} loyal customers (True Negatives)")
+print(f"  ❌ Missed {fn} churners (False Negatives - COSTLY!)")
+print(f"  ⚠️  {fp} false alarms (False Positives - wasted retention effort)")
+
+# Cross-validation
+cv_scores = cross_val_score(model, X_train_scaled, y_train, cv=5, scoring='recall')
+print(f"\n🔄 Cross-Validation (5-fold):")
+print(f"  Recall scores: {cv_scores}")
+print(f"  Mean recall: {cv_scores.mean():.3f} ± {cv_scores.std():.3f}")
+
+# BUSINESS IMPACT ANALYSIS
+
+print("\n" + "="*70)
+print("STEP 7: BUSINESS IMPACT ANALYSIS")
+print("="*70)
+
+# Financial calculations
+retention_cost = 500  # ₹500 per customer
+customer_ltv = 50000  # ₹50,000 lifetime value
+retention_success_rate = 0.7  # 70% of identified churners can be retained
+
+# Scenario 1: Without ML model (no intervention)
+total_churners = churn_counts[1]
+lost_revenue_no_ml = total_churners * customer_ltv
+
+print(f"\n💰 SCENARIO 1: Without ML Model")
+print(f"{'─'*50}")
+print(f"  Total churners: {total_churners:,}")
+print(f"  Lost revenue: ₹{lost_revenue_no_ml/1e7:.2f} crore")
+print(f"  Retention cost: ₹0 (no intervention)")
+print(f"  Net loss: ₹{lost_revenue_no_ml/1e7:.2f} crore")
+
+# Scenario 2: With ML model
+identified_churners = tp  # True positives in test set
+missed_churners = fn
+false_alarms = fp
+
+# Scale up to full customer base
+scale_factor = len(df) / len(y_test)
+identified_churners_full = int(identified_churners * scale_factor)
+false_alarms_full = int(false_alarms * scale_factor)
+
+retained_customers = int(identified_churners_full * retention_success_rate)
+saved_revenue = retained_customers * customer_ltv
+total_retention_cost = (identified_churners_full + false_alarms_full) * retention_cost
+net_benefit = saved_revenue - total_retention_cost
+
+print(f"\n💰 SCENARIO 2: With ML Model")
+print(f"{'─'*50}")
+print(f"  Identified churners: {identified_churners_full:,}")
+print(f"  False alarms: {false_alarms_full:,}")
+print(f"  Retention campaigns: {identified_churners_full + false_alarms_full:,}")
+print(f"  Successfully retained: {retained_customers:,} (70% of identified)")
+print(f"  Saved revenue: ₹{saved_revenue/1e7:.2f} crore")
+print(f"  Campaign cost: ₹{total_retention_cost/1e5:.2f} lakh")
+print(f"  Net benefit: ₹{net_benefit/1e7:.2f} crore")
+
+print(f"\n🎉 ROI of ML Model:")
+roi = (net_benefit / total_retention_cost) * 100
+print(f"  Return on Investment: {roi:.0f}%")
+print(f"  For every ₹1 spent on retention: ₹{roi/100:.2f} saved!")

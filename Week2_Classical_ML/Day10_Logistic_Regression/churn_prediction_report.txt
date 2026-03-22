@@ -1,0 +1,25 @@
+CUSTOMER CHURN PREDICTION - DETAILED REPORT
+======================================================================
+
+Model Performance:
+  Accuracy: 92.7%
+  Recall: 1.0%
+  Precision: 50.0%
+  ROC-AUC: 0.746
+
+Business Impact:
+  Net Benefit: ₹0.01 crore annually
+  ROI: 2900%
+  Customers Saved: 3
+
+Top Features:
+  MonthlyCharges: 0.6190
+  Tenure_Months: -0.4599
+  Contract: -0.4541
+  TotalCharges: -0.4018
+  InternetService: 0.3801
+  HasSupport: -0.2017
+  OnlineSecurity: -0.1882
+  SeniorCitizen: 0.1222
+  LongTermCustomer: -0.1120
+  Gender_Male: -0.1090

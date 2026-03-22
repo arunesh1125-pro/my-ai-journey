@@ -363,3 +363,219 @@ print(f"\n🎉 ROI of ML Model:")
 roi = (net_benefit / total_retention_cost) * 100
 print(f"  Return on Investment: {roi:.0f}%")
 print(f"  For every ₹1 spent on retention: ₹{roi/100:.2f} saved!")
+
+# Visualization
+
+fig = plt.figure(figsize=(16, 14))
+gs = fig.add_gridspec(4, 3, hspace=0.4, wspace=0.35)
+
+# Plot 1: Churn Rate Overview
+ax1 = fig.add_subplot(gs[0, 0])
+churn_data = df['Churned'].value_counts()
+colors_churn = ['#2ecc71', '#e74c3c']
+wedges, texts, autotexts = ax1.pie(churn_data.values, labels=['Stayed', 'Churned'],
+                                     autopct='%1.1f%%', colors=colors_churn,
+                                     startangle=90, textprops={'fontsize': 12, 'weight': 'bold'})
+for autotext in autotexts:
+    autotext.set_color('white')
+    autotext.set_fontsize(14)
+ax1.set_title('Overall Churn Distribution', fontweight='bold', fontsize=13)
+
+# Plot 2: Churn by Contract Type
+ax2 = fig.add_subplot(gs[0, 1])
+contract_churn_data = df.groupby('Contract')['Churned'].mean()
+contract_labels = ['Month-to-month', 'One year', 'Two year']
+colors_contract = ['#e74c3c', '#f39c12', '#2ecc71']
+bars = ax2.bar(range(3), contract_churn_data.values, color=colors_contract, 
+               edgecolor='black', linewidth=2)
+ax2.set_xticks(range(3))
+ax2.set_xticklabels(contract_labels, fontsize=10)
+ax2.set_ylabel('Churn Rate', fontweight='bold', fontsize=11)
+ax2.set_title('Churn Rate by Contract Type', fontweight='bold', fontsize=13)
+ax2.grid(axis='y', alpha=0.3)
+for i, v in enumerate(contract_churn_data.values):
+    ax2.text(i, v + 0.02, f'{v:.1%}', ha='center', fontweight='bold', fontsize=11)
+
+# Plot 3: Churn by Tenure
+ax3 = fig.add_subplot(gs[0, 2])
+tenure_bins = [0, 12, 24, 36, 48, 72]
+tenure_labels = ['0-12', '12-24', '24-36', '36-48', '48-72']
+df['Tenure_Bin'] = pd.cut(df['Tenure_Months'], bins=tenure_bins, labels=tenure_labels)
+tenure_churn_data = df.groupby('Tenure_Bin')['Churned'].mean()
+ax3.plot(range(len(tenure_churn_data)), tenure_churn_data.values, 
+         marker='o', markersize=10, linewidth=3, color='#9b59b6')
+ax3.set_xticks(range(len(tenure_churn_data)))
+ax3.set_xticklabels(tenure_labels, fontsize=10)
+ax3.set_xlabel('Tenure (Months)', fontweight='bold', fontsize=11)
+ax3.set_ylabel('Churn Rate', fontweight='bold', fontsize=11)
+ax3.set_title('Churn Rate by Tenure', fontweight='bold', fontsize=13)
+ax3.grid(True, alpha=0.3)
+
+# Plot 4: Feature Importance
+ax4 = fig.add_subplot(gs[1, :])
+top_features = feature_importance.head(10)
+colors_importance = ['#2ecc71' if c < 0 else '#e74c3c' for c in top_features['Coefficient']]
+ax4.barh(range(len(top_features)), top_features['Coefficient'], 
+         color=colors_importance, edgecolor='black', linewidth=1.5)
+ax4.set_yticks(range(len(top_features)))
+ax4.set_yticklabels(top_features['Feature'], fontsize=10)
+ax4.set_xlabel('Coefficient (Impact on Churn)', fontweight='bold', fontsize=11)
+ax4.set_title('Top 10 Features Impacting Churn', fontweight='bold', fontsize=14)
+ax4.axvline(x=0, color='black', linewidth=2)
+ax4.grid(axis='x', alpha=0.3)
+
+# Plot 5: Confusion Matrix
+ax5 = fig.add_subplot(gs[2, 0])
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', cbar=False,
+            xticklabels=['Stay', 'Churn'],
+            yticklabels=['Stay', 'Churn'],
+            ax=ax5, annot_kws={'size': 14, 'weight': 'bold'})
+ax5.set_ylabel('Actual', fontweight='bold', fontsize=12)
+ax5.set_xlabel('Predicted', fontweight='bold', fontsize=12)
+ax5.set_title('Confusion Matrix', fontweight='bold', fontsize=13)
+
+# Plot 6: Metrics Comparison
+ax6 = fig.add_subplot(gs[2, 1])
+metrics = ['Accuracy', 'Precision', 'Recall', 'F1-Score']
+values = [accuracy, precision, recall, f1]
+colors_metrics = ['#3498db', '#2ecc71', '#e74c3c', '#f39c12']
+bars = ax6.bar(metrics, values, color=colors_metrics, edgecolor='black', linewidth=2)
+ax6.set_ylim(0, 1)
+ax6.set_ylabel('Score', fontweight='bold', fontsize=11)
+ax6.set_title('Model Performance Metrics', fontweight='bold', fontsize=13)
+ax6.grid(axis='y', alpha=0.3)
+for i, v in enumerate(values):
+    ax6.text(i, v + 0.02, f'{v:.3f}', ha='center', fontweight='bold', fontsize=11)
+
+# Plot 7: ROC Curve
+ax7 = fig.add_subplot(gs[2, 2])
+fpr, tpr, _ = roc_curve(y_test, y_pred_proba)
+ax7.plot(fpr, tpr, linewidth=3, color='#2ecc71', label=f'ROC (AUC={roc_auc:.3f})')
+ax7.plot([0, 1], [0, 1], 'k--', linewidth=2, alpha=0.5)
+ax7.fill_between(fpr, tpr, alpha=0.3, color='#2ecc71')
+ax7.set_xlabel('False Positive Rate', fontweight='bold', fontsize=11)
+ax7.set_ylabel('True Positive Rate', fontweight='bold', fontsize=11)
+ax7.set_title('ROC Curve', fontweight='bold', fontsize=13)
+ax7.legend(fontsize=10)
+ax7.grid(True, alpha=0.3)
+
+# Plot 8: Business Impact
+ax8 = fig.add_subplot(gs[3, :])
+ax8.axis('off')
+
+impact_text = f"""
+╔══════════════════════════════════════════════════════════════════════════╗
+║                      BUSINESS IMPACT SUMMARY                            ║
+╠══════════════════════════════════════════════════════════════════════════╣
+║                                                                          ║
+║  WITHOUT ML MODEL:                                                       ║
+║  • Total churners: {total_churners:,}                                          ║
+║  • Lost revenue: ₹{lost_revenue_no_ml/1e7:.2f} crore                                        ║
+║  • Net loss: ₹{lost_revenue_no_ml/1e7:.2f} crore                                            ║
+║                                                                          ║
+║  WITH ML MODEL:                                                          ║
+║  • Identified churners: {identified_churners_full:,}                                ║
+║  • Successfully retained: {retained_customers:,} (70% conversion)                  ║
+║  • Saved revenue: ₹{saved_revenue/1e7:.2f} crore                                      ║
+║  • Campaign cost: ₹{total_retention_cost/1e5:.2f} lakh                                         ║
+║  • NET BENEFIT: ₹{net_benefit/1e7:.2f} crore                                        ║
+║                                                                          ║
+║  ROI: {roi:.0f}% (₹{roi/100:.1f} saved for every ₹1 spent!)                             ║
+║                                                                          ║
+║  KEY METRICS:                                                            ║
+║  • Recall: {recall:.1%} (catching {recall:.0%} of churners)                          ║
+║  • Precision: {precision:.1%} (avoiding unnecessary campaigns)                   ║
+║  • Model saves ~{net_benefit/customer_ltv:.0f} customer relationships annually!            ║
+║                                                                          ║
+╚══════════════════════════════════════════════════════════════════════════╝
+"""
+
+ax8.text(0.5, 0.5, impact_text, transform=ax8.transAxes,
+         fontsize=11, verticalalignment='center', horizontalalignment='center',
+         family='monospace', fontweight='bold',
+         bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+
+plt.suptitle('CUSTOMER CHURN PREDICTION - COMPLETE ANALYSIS', 
+             fontsize=18, fontweight='bold', y=0.995)
+plt.savefig('05_customer_churn_complete.png', dpi=300, bbox_inches='tight')
+plt.close()
+print("\n✅ Saved: 05_customer_churn_complete.png")
+
+# ACTIONABLE RECOMMENDATIONS
+print("\n" + "="*70)
+print("STEP 8: ACTIONABLE BUSINESS RECOMMENDATIONS")
+print("="*70)
+
+recommendations = """
+🎯 IMMEDIATE ACTIONS (This Quarter):
+
+1. TARGET HIGH-RISK CUSTOMERS
+   → Focus on month-to-month contract customers
+   → Prioritize those with tenure < 12 months
+   → Offer contract upgrade incentives
+
+2. RETENTION CAMPAIGN STRATEGY
+   → Deploy model to score all 7,000 customers weekly
+   → Target top 15% risk scores (≈1,000 customers)
+   → Personalized retention offers based on features
+
+3. CONTRACT OPTIMIZATION
+   → Aggressive discounts for annual contracts
+   → Example: "Lock in ₹55/month for 2 years"
+   → Reduces churn by 40% (model shows this!)
+
+4. SERVICE IMPROVEMENTS
+   → Add free online security for fiber customers
+   → Proactive tech support for high-value accounts
+   → Both features reduce churn significantly
+
+📊 MONITORING PLAN:
+
+Weekly:
+  • Re-score all customers
+  • Track retention campaign success rate
+  • Monitor false alarm rate
+
+Monthly:
+  • Retrain model with new data
+  • A/B test different retention offers
+  • Measure actual vs predicted churn
+
+Quarterly:
+  • Full model performance review
+  • ROI calculation
+  • Strategy adjustment
+
+🎁 RECOMMENDED RETENTION OFFERS:
+
+High Risk + High Value → 30% discount + free premium support (₹1,500 value)
+High Risk + Low Value → Free upgrade to annual contract (₹800 value)
+Medium Risk → 15% discount + 1 month free (₹500 value)
+
+Expected Conversion: 70% (based on industry benchmarks)
+"""
+
+print(recommendations)
+
+# Save detailed report
+with open('churn_prediction_report.txt', 'w', encoding='utf-8') as f:
+    f.write("CUSTOMER CHURN PREDICTION - DETAILED REPORT\n")
+    f.write("="*70 + "\n\n")
+    f.write(f"Model Performance:\n")
+    f.write(f"  Accuracy: {accuracy:.1%}\n")
+    f.write(f"  Recall: {recall:.1%}\n")
+    f.write(f"  Precision: {precision:.1%}\n")
+    f.write(f"  ROC-AUC: {roc_auc:.3f}\n\n")
+    f.write(f"Business Impact:\n")
+    f.write(f"  Net Benefit: ₹{net_benefit/1e7:.2f} crore annually\n")
+    f.write(f"  ROI: {roi:.0f}%\n")
+    f.write(f"  Customers Saved: {retained_customers:,}\n\n")
+    f.write("Top Features:\n")
+    for idx, row in feature_importance.head(10).iterrows():
+        f.write(f"  {row['Feature']}: {row['Coefficient']:.4f}\n")
+
+print("\n✅ Saved detailed report: churn_prediction_report.txt")
+
+print("\n" + "="*70)
+print("PROJECT 1 COMPLETE: CUSTOMER CHURN PREDICTION")
+print("="*70)

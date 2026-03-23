@@ -166,7 +166,6 @@ print(f"  Fraud avg time: {fraud_amounts.mean():.1f}s")
 
 # NAIVE APPROACH (BASELINE)
 
-
 print("\n" + "="*70)
 print("STEP 3: NAIVE BASELINE (Why Simple Accuracy Fails)")
 print("="*70)
@@ -182,7 +181,6 @@ X_train, X_test, y_train, y_test = train_test_split(
 print(f"Train set: {len(X_train):,} transactions")
 print(f"Test set:  {len(X_test):,} transactions")
 print(f"Test fraud rate: {y_test.mean()*100:.2f}%")
-
 
 # Standardize
 scaler = StandardScaler()
@@ -406,12 +404,21 @@ comparison_df = pd.DataFrame({
     'FP': [fp_n, fp_w, fp_s, fp_o],
     'FN': [fn_n, fn_w, fn_s, fn_o]
 })
+
+print(f"\n📊 Complete Model Comparison:")
+print(comparison_df.to_string(index=False))
+
+print(f"\n💡 Key Insights:")
+print(f"  • Naive model: High accuracy but useless (low recall)")
+print(f"  • Class Weights: Simple, effective improvement")
+print(f"  • SMOTE: Best recall, catches most fraud")
+print(f"  • Threshold Tuning: Fine-tune precision/recall trade-off")
+
 # BUSINESS IMPACT ANALYSIS
 
 print("\n" + "="*70)
 print("STEP 8: BUSINESS IMPACT ANALYSIS")
 print("="*70)
-
 
 # Use SMOTE model (best recall)
 avg_fraud_amount = fraud_amounts.mean()
@@ -459,3 +466,237 @@ roi = (net_benefit / total_cost) * 100
 print(f"\n🎉 ROI of Fraud Detection System:")
 print(f"  Return on Investment: {roi:.0f}%")
 print(f"  For every ₹1 spent: ₹{roi/100:.1f} saved in fraud losses!")
+
+# VISUALIZATION
+
+fig = plt.figure(figsize=(18, 14))
+gs = fig.add_gridspec(4, 3, hspace=0.4, wspace=0.35)
+
+# Plot 1: Class Imbalance
+ax1 = fig.add_subplot(gs[0, 0])
+class_counts = df['Class'].value_counts()
+colors_class = ['#2ecc71', '#e74c3c']
+bars = ax1.bar(['Legitimate', 'Fraud'], class_counts.values, 
+               color=colors_class, edgecolor='black', linewidth=2)
+ax1.set_ylabel('Count', fontweight='bold', fontsize=11)
+ax1.set_title('Extreme Class Imbalance', fontweight='bold', fontsize=13)
+ax1.set_yscale('log')
+ax1.grid(axis='y', alpha=0.3)
+for i, v in enumerate(class_counts.values):
+    ax1.text(i, v, f'{v:,}\n({v/len(df)*100:.2f}%)', 
+             ha='center', va='bottom', fontweight='bold', fontsize=10)
+
+# Plot 2: Amount Distribution
+ax2 = fig.add_subplot(gs[0, 1])
+ax2.hist(legit_amounts, bins=50, alpha=0.6, label='Legitimate', 
+         color='blue', edgecolor='black', density=True)
+ax2.hist(fraud_amounts, bins=30, alpha=0.6, label='Fraud',
+         color='red', edgecolor='black', density=True)
+ax2.set_xlabel('Transaction Amount (₹)', fontweight='bold', fontsize=11)
+ax2.set_ylabel('Density', fontweight='bold', fontsize=11)
+ax2.set_title('Transaction Amount Distribution', fontweight='bold', fontsize=13)
+ax2.legend(fontsize=10)
+ax2.set_xlim(0, 100000)
+ax2.grid(True, alpha=0.3)
+
+# Plot 3: Model Comparisoon - Recall
+ax3 = fig.add_subplot(gs[0, 2])
+models = comparison_df['Model']
+recalls = comparison_df['Recall']
+colors_recall = ['#e74c3c', '#f39c12', '#2ecc71', '#3498db']
+bars = ax3.barh(models, recalls, color=colors_recall, edgecolor='black', linewidth=2)
+ax3.set_xlabel('Recall (Fraud Detection Rate)', fontweight='bold', fontsize=11)
+ax3.set_title('Model Comparison: Recall', fontweight='bold', fontsize=13)
+ax3.set_xlim(0, 1)
+ax3.grid(axis='x', alpha=0.3)
+for i, v in enumerate(recalls):
+    ax3.text(v + 0.02, i, f'{v:.1%}', va='center', fontweight='bold', fontsize=10)
+
+# Plot 4: COnfusion Matrices Comparison
+ax4 = fig.add_subplot(gs[1, :])
+cms = [cm_naive, cm_weighted, cm_smote, cm_optimal]
+titles = ['Naive', 'Class Weights', 'SMOTE', 'Optimal Threshold']
+
+for idx, (cm_data, title) in enumerate(zip(cms, titles)):
+    ax = plt.subplot(2, 4, idx + 1)
+    sns.heatmap(cm_data, annot=True, fmt='d', cmap='Blues', cbar=False,
+                xticklabels=['Legit', 'Fraud'],
+                yticklabels=['Legit', 'Fraud'],
+                ax=ax, annot_kws={'size': 11, 'weight': 'bold'})
+    ax.set_ylabel('Actual', fontweight='bold', fontsize=10)
+    ax.set_xlabel('Predicted', fontweight='bold', fontsize=10)
+    ax.set_title(title, fontweight='bold', fontsize=12)
+
+# Plot 5: Precision-Recall Trade-off
+ax5 = fig.add_subplot(gs[2, 0])
+precisions, recalls, _ = precision_recall_curve(y_test, y_pred_proba_smote)
+ax5.plot(recalls, precisions, linewidth=3, color='#9b59b6')
+ax5.fill_between(recalls, precisions, alpha=0.3, color='#9b59b6')
+ax5.set_xlabel('Recall', fontweight='bold', fontsize=11)
+ax5.set_ylabel('Precision', fontweight='bold', fontsize=11)
+ax5.set_title('Precision-Recall Curve (SMOTE)', fontweight='bold', fontsize=13)
+ax5.grid(True, alpha=0.3)
+
+# Plot 6: ROC Curve Comparison
+ax6 = fig.add_subplot(gs[2, 1])
+fpr_naive, tpr_naive, _ = roc_curve(y_test, y_pred_proba_naive)
+fpr_weighted, tpr_weighted, _ = roc_curve(y_test, y_pred_proba_weighted)
+fpr_smote, tpr_smote, _ = roc_curve(y_test, y_pred_proba_smote)
+
+ax6.plot(fpr_naive, tpr_naive, linewidth=2, label=f'Naive (AUC={roc_auc_score(y_test, y_pred_proba_naive):.3f})', color='#e74c3c')
+ax6.plot(fpr_weighted, tpr_weighted, linewidth=2, label=f'Weighted (AUC={roc_auc_score(y_test, y_pred_proba_weighted):.3f})', color='#f39c12')
+ax6.plot(fpr_smote, tpr_smote, linewidth=2, label=f'SMOTE (AUC={roc_auc_score(y_test, y_pred_proba_smote):.3f})', color='#2ecc71')
+ax6.plot([0, 1], [0, 1], 'k--', linewidth=1, alpha=0.5)
+ax6.set_xlabel('False Positive Rate', fontweight='bold', fontsize=11)
+ax6.set_ylabel('True Positive Rate', fontweight='bold', fontsize=11)
+ax6.set_title('ROC Curves Comparison', fontweight='bold', fontsize=13)
+ax6.legend(fontsize=9)
+ax6.grid(True, alpha=0.3)
+
+# Plot 7: threshold Impact
+ax7 = fig.add_subplot(gs[2, 2])
+ax7.plot(threshold_df['Threshold'], threshold_df['Precision'], 
+         'o-', linewidth=2, markersize=6, label='Precision', color='#3498db')
+ax7.plot(threshold_df['Threshold'], threshold_df['Recall'],
+         's-', linewidth=2, markersize=6, label='Recall', color='#e74c3c')
+ax7.plot(threshold_df['Threshold'], threshold_df['F1'],
+         '^-', linewidth=2, markersize=6, label='F1-Score', color='#2ecc71')
+ax7.axvline(x=optimal_threshold, color='purple', linestyle='--', 
+            linewidth=2, alpha=0.7, label=f'Optimal ({optimal_threshold})')
+ax7.set_xlabel('Decision Threshold', fontweight='bold', fontsize=11)
+ax7.set_ylabel('Score', fontweight='bold', fontsize=11)
+ax7.set_title('Threshold Tuning Analysis', fontweight='bold', fontsize=13)
+ax7.legend(fontsize=9)
+ax7.grid(True, alpha=0.3)
+
+# Plot 8: Business Impact Summary
+ax8 = fig.add_subplot(gs[3, :])
+ax8.axis('off')
+
+impact_text = f"""
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         BUSINESS IMPACT SUMMARY                              ║
+╠══════════════════════════════════════════════════════════════════════════════╣
+║                                                                              ║
+║  WITHOUT FRAUD DETECTION:                                                    ║
+║  • Annual fraud transactions: {total_fraud_annual:,}                                    ║
+║  • Total fraud loss: ₹{fraud_loss_no_model/1e7:.2f} crore                                          ║
+║                                                                              ║
+║  WITH FRAUD DETECTION (SMOTE Model):                                         ║
+║  • Frauds detected: {detected_fraud_annual:,} ({recall_smote:.1%} catch rate)                        ║
+║  • Prevented loss: ₹{detected_fraud_annual * avg_fraud_amount/1e7:.2f} crore                                        ║
+║  • Missed frauds: {missed_fraud_annual:,}                                                   ║
+║  • False alarms: {false_alarms_annual:,} (customer inconvenience)                         ║
+║  • Operational cost: ₹{total_cost/1e5:.2f} lakh                                             ║
+║  • NET BENEFIT: ₹{net_benefit/1e7:.2f} crore annually                                      ║
+║                                                                              ║
+║  ROI: {roi:.0f}% (₹{roi/100:.1f} saved per ₹1 spent)                                         ║
+║                                                                              ║
+║  KEY METRICS (SMOTE Model):                                                  ║
+║  • Precision: {precision_smote:.1%} ({precision_smote*100:.0f}% of flagged transactions are fraud)        ║
+║  • Recall: {recall_smote:.1%} (catching {recall_smote*100:.0f}% of all fraud)                           ║
+║  • F1-Score: {f1_smote:.3f} (balanced performance)                                     ║
+║                                                                              ║
+║  RECOMMENDATION: Deploy SMOTE model with continuous monitoring               ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+"""
+
+ax8.text(0.5, 0.5, impact_text, transform=ax8.transAxes,
+         fontsize=10, verticalalignment='center', horizontalalignment='center',
+         family='monospace', fontweight='bold',
+         bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.8))
+
+plt.suptitle('CREDIT CARD FRAUD DETECTION - COMPLETE ANALYSIS', 
+             fontsize=18, fontweight='bold', y=0.995)
+
+plt.savefig('06_fraud_detection_complete.png', dpi=300, bbox_inches='tight')
+plt.close()
+print("\n✅ Saved: 06_fraud_detection_complete.png")
+
+# ACTIONABLE RECOMMENDATIONS
+
+print("\n" + "="*70)
+print("STEP 9: DEPLOYMENT RECOMMENDATIONS")
+print("="*70)
+
+recommendations = f"""
+🎯 RECOMMENDED APPROACH: SMOTE + Threshold Tuning
+
+DEPLOYMENT STRATEGY:
+
+1. PRIMARY MODEL: SMOTE-based Logistic Regression
+   → Best fraud detection rate ({recall_smote:.1%})
+   → Acceptable false alarm rate
+   → Real-time scoring capability
+
+2. THRESHOLD CONFIGURATION:
+   → Standard threshold: {optimal_threshold} (balanced)
+   → High-value transactions (>₹50,000): Lower threshold (0.2)
+     • Catch more fraud on expensive transactions
+   → Low-value transactions (<₹5,000): Higher threshold (0.5)
+     • Reduce false alarms on small purchases
+
+3. AUTOMATED ACTIONS:
+   → Score > 0.8: Block transaction immediately
+   → Score 0.5-0.8: SMS verification required
+   → Score 0.3-0.5: Flag for manual review within 24h
+   → Score < 0.3: Allow transaction
+
+4. MONITORING & MAINTENANCE:
+   Weekly:
+   • Track precision, recall, false alarm rate
+   • Monitor fraud patterns (new attack vectors)
+   • Adjust thresholds based on performance
+
+   Monthly:
+   • Retrain model with new fraud examples
+   • Update SMOTE parameters
+   • A/B test alternative approaches
+
+   Quarterly:
+   • Full system audit
+   • Cost-benefit analysis
+   • Explore advanced models (Random Forest, XGBoost)
+
+5. CUSTOMER EXPERIENCE:
+   → SMS: "Unusual transaction detected. Reply Y to confirm"
+   → Reduce friction: 2-factor auth only when needed
+   → False positive handling: Easy appeal process
+
+6. CONTINUOUS IMPROVEMENT:
+   → Collect feedback on false positives
+   → Label new fraud patterns quickly
+   → Adversarial testing (simulate attacks)
+
+EXPECTED OUTCOMES:
+✅ Prevent ₹{net_benefit/1e7:.2f} crore fraud losses annually
+✅ Catch {recall_smote:.0%}+ of fraudulent transactions
+✅ Maintain customer satisfaction (minimal false alarms)
+✅ {roi:.0f}% ROI on fraud detection system
+"""
+
+print(recommendations.format(
+    recall_smote=recall_smote,
+    optimal_threshold=optimal_threshold,
+    net_benefit=net_benefit,
+    roi=roi
+))
+
+# Save detailed report
+with open('fraud_detection_report.txt', 'w', encoding='utf-8') as f:
+    f.write("CREDIT CARD FRAUD DETECTION - DETAILED REPORT\n")
+    f.write("="*70 + "\n\n")
+    f.write("Model Comparison:\n")
+    f.write(comparison_df.to_string(index=False))
+    f.write("\n\nBusiness Impact:\n")
+    f.write(f"  Net Benefit: ₹{net_benefit/1e7:.2f} crore annually\n")
+    f.write(f"  ROI: {roi:.0f}%\n")
+    f.write(f"  Frauds Detected: {detected_fraud_annual:,}\n")
+    f.write(f"  Prevented Loss: ₹{detected_fraud_annual * avg_fraud_amount/1e7:.2f} crore\n")
+
+print("\n✅ Saved detailed report: fraud_detection_report.txt")
+
+print("\n" + "="*70)
+print("PROJECT 2 COMPLETE: CREDIT CARD FRAUD DETECTION")
+print("="*70)

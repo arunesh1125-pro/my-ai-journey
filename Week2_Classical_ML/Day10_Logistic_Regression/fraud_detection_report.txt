@@ -1,0 +1,15 @@
+CREDIT CARD FRAUD DETECTION - DETAILED REPORT
+======================================================================
+
+Model Comparison:
+            Model  Accuracy  Precision   Recall  F1-Score  TP  FP  FN
+            Naive  0.999567   0.933333 0.807692  0.865979  42   3  10
+    Class Weights  0.989551   0.138122 0.961538  0.241546  50 312   2
+            SMOTE  0.992979   0.193050 0.961538  0.321543  50 209   2
+Optimal Threshold  0.995242   0.259259 0.942308  0.406639  49 140   3
+
+Business Impact:
+  Net Benefit: ₹162.34 crore annually
+  ROI: 1136%
+  Frauds Detected: 60,832
+  Prevented Loss: ₹176.62 crore

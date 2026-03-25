@@ -427,3 +427,66 @@ print(f"  Recall:    {recall_optimal:.1%} ← Maximized!")
 print(f"  F1-Score:  {f1_optimal:.3f}")
 print(f"  False Negatives: {fn_opt} (missed diagnoses)")
 print(f"  False Positives: {fp_opt} (extra follow-ups)")
+
+# CLINICAL COST-BENEFIT ANALYSIS
+
+print("\n" + "="*70)
+print("STEP 8: CLINICAL COST-BENEFIT ANALYSIS")
+print("="*70)
+
+# Cost parameters
+screening_cost = 500  # ₹500 per screening test
+followup_cost = 5000  # ₹5,000 for follow-up tests
+treatment_early = 50000  # ₹50,000 early treatment
+treatment_late = 500000  # ₹5 lakh late-stage treatment
+mortality_cost = 10000000  # ₹1 crore (loss of life value)
+
+
+# Scale to annual screening (100,000 patients)
+annual_patients = 100000
+scale_factor = annual_patients / len(y_test)
+
+# Scenario 1: No screening
+disease_patients_total = int(y_test.sum() * scale_factor)
+cost_no_screening = disease_patients_total * treatment_late
+print(f"\n💰 SCENARIO 1: No Screening Program")
+print(f"{'─'*50}")
+print(f"  Annual patients: {annual_patients:,}")
+print(f"  Undetected disease cases: {disease_patients_total:,}")
+print(f"  Late-stage treatment cost: ₹{cost_no_screening/1e7:.2f} crore")
+print(f"  Preventable deaths: ~{int(disease_patients_total * 0.3):,} (30% mortality)")
+
+
+# Scenario 2: With optimized screening
+total_screening_cost = annual_patients * screening_cost
+detected_disease = int(tp_opt * scale_factor)
+missed_disease = int(fn_opt * scale_factor)
+false_alarms = int(fp_opt * scale_factor)
+
+followup_cost_total = false_alarms * followup_cost
+early_treatment_cost = detected_disease * treatment_early
+late_treatment_cost = missed_disease * treatment_late
+
+total_cost_with_screening = (total_screening_cost + followup_cost_total + 
+                             early_treatment_cost + late_treatment_cost)
+lives_saved = int(detected_disease * 0.25)  # 25% mortality reduction
+net_benefit = cost_no_screening - total_cost_with_screening
+
+print(f"\n💰 SCENARIO 2: With Optimized Screening (Threshold={optimal_medical_threshold})")
+print(f"{'─'*50}")
+print(f"  Screening cost: ₹{total_screening_cost/1e7:.2f} crore ({annual_patients:,} × ₹{screening_cost})")
+print(f"  Detected disease: {detected_disease:,} (early intervention)")
+print(f"  Missed disease: {missed_disease:,} (late-stage treatment)")
+print(f"  False alarms: {false_alarms:,} (follow-up tests)")
+print(f"  Follow-up cost: ₹{followup_cost_total/1e7:.2f} crore")
+print(f"  Early treatment: ₹{early_treatment_cost/1e7:.2f} crore")
+print(f"  Late treatment: ₹{late_treatment_cost/1e7:.2f} crore")
+print(f"  Total program cost: ₹{total_cost_with_screening/1e7:.2f} crore")
+print(f"  Lives saved: ~{lives_saved:,}")
+print(f"  NET BENEFIT: ₹{net_benefit/1e7:.2f} crore")
+
+roi = (net_benefit / total_cost_with_screening) * 100
+print(f"\n🎉 Healthcare ROI:")
+print(f"  Return on Investment: {roi:.0f}%")
+print(f"  Cost per life saved: ₹{total_cost_with_screening/lives_saved:,.0f}")
+print(f"  → Screening program is HIGHLY cost-effective!")

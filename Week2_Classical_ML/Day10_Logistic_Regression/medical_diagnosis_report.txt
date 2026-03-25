@@ -1,0 +1,25 @@
+HEART DISEASE SCREENING - DETAILED REPORT
+======================================================================
+
+Model Performance:
+  Recall: 87.5%
+  Precision: 15.9%
+  F1-Score: 0.269
+  Optimal Threshold: 0.1
+
+Clinical Impact:
+  Net Benefit: ₹291.50 crore annually
+  Lives Saved: 1,750
+  ROI: 269%
+  False Negatives: 1,000
+
+Top Risk Factors:
+  NumVessels: 0.6272
+  ExerciseAngina: 0.5839
+  Oldpeak: 0.5290
+  Age: 0.4909
+  MaxHR: -0.3930
+  Sex: 0.3280
+  RestingBP: 0.2613
+  Cholesterol: 0.1243
+  FastingBS: 0.0779

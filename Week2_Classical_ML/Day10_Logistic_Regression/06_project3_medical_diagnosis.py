@@ -490,3 +490,273 @@ print(f"\n🎉 Healthcare ROI:")
 print(f"  Return on Investment: {roi:.0f}%")
 print(f"  Cost per life saved: ₹{total_cost_with_screening/lives_saved:,.0f}")
 print(f"  → Screening program is HIGHLY cost-effective!")
+
+# VISUALIZATION
+
+fig = plt.figure(figsize=(18, 14))
+gs = fig.add_gridspec(4, 3, hspace=0.4, wspace=0.35)
+
+# Plot 1: Disease Prevalence
+ax1 = fig.add_subplot(gs[0, 0])
+disease_data = df['HeartDisease'].value_counts()
+colors_disease = ['#2ecc71', '#e74c3c']
+wedges, texts, autotexts = ax1.pie(disease_data.values, labels=['Healthy', 'Disease'],
+                                     autopct='%1.1f%%', colors=colors_disease,
+                                     startangle=90, textprops={'fontsize': 12, 'weight': 'bold'})
+for autotext in autotexts:
+    autotext.set_color('white')
+    autotext.set_fontsize(14)
+ax1.set_title('Disease Prevalence', fontweight='bold', fontsize=13)
+
+# Plot 2: Age Distribution by Disease
+ax2 = fig.add_subplot(gs[0, 1])
+healthy_ages = df[df['HeartDisease'] == 0]['Age']
+disease_ages = df[df['HeartDisease'] == 1]['Age']
+ax2.hist([healthy_ages, disease_ages], bins=20, label=['Healthy', 'Disease'],
+         color=['#2ecc71', '#e74c3c'], alpha=0.7, edgecolor='black')
+ax2.set_xlabel('Age (years)', fontweight='bold', fontsize=11)
+ax2.set_ylabel('Frequency', fontweight='bold', fontsize=11)
+ax2.set_title('Age Distribution by Disease Status', fontweight='bold', fontsize=13)
+ax2.legend(fontsize=10)
+ax2.grid(axis='y', alpha=0.3)
+
+# Plot 3: Feature Importance
+ax3 = fig.add_subplot(gs[0, 2])
+top_features = feature_importance.head(9)
+colors_importance = ['#e74c3c' if c > 0 else '#2ecc71' for c in top_features['Coefficient_Weighted']]
+ax3.barh(range(len(top_features)), top_features['Coefficient_Weighted'],
+         color=colors_importance, edgecolor='black', linewidth=1.5)
+ax3.set_yticks(range(len(top_features)))
+ax3.set_yticklabels(top_features['Feature'], fontsize=10)
+ax3.set_xlabel('Coefficient', fontweight='bold', fontsize=11)
+ax3.set_title('Clinical Risk Factors', fontweight='bold', fontsize=13)
+ax3.axvline(x=0, color='black', linewidth=2)
+ax3.grid(axis='x', alpha=0.3)
+
+
+# Plot 4: Model Comparison - Confusion Matrices
+cms = [cm_std, cm_wt, cm_optimal]
+titles = ['Standard\n(Threshold=0.5)', 'Weighted\n(Threshold=0.5)', 
+          f'Optimized\n(Threshold={optimal_medical_threshold})']
+
+for idx, (cm_data, title) in enumerate(zip(cms, titles)):
+    ax = plt.subplot(gs[1, idx])
+    sns.heatmap(cm_data, annot=True, fmt='d', cmap='RdYlGn', cbar=False,
+                xticklabels=['Healthy', 'Disease'],
+                yticklabels=['Healthy', 'Disease'],
+                ax=ax, annot_kws={'size': 12, 'weight': 'bold'})
+    ax.set_ylabel('Actual', fontweight='bold', fontsize=11)
+    ax.set_xlabel('Predicted', fontweight='bold', fontsize=11)
+    ax.set_title(title, fontweight='bold', fontsize=12)
+
+# Plot 5: Recall comparison
+ax5 = fig.add_subplot(gs[2, 0])
+models = ['Standard', 'Weighted', 'Optimized']
+recalls = [recall_std, recall_wt, recall_optimal]
+fns = [fn_std, fn_wt, fn_opt]
+colors_recall = ['#f39c12', '#3498db', '#2ecc71']
+bars = ax5.bar(models, recalls, color=colors_recall, edgecolor='black', linewidth=2)
+ax5.set_ylabel('Recall (Disease Detection Rate)', fontweight='bold', fontsize=11)
+ax5.set_title('Model Comparison: Recall', fontweight='bold', fontsize=13)
+ax5.set_ylim(0, 1)
+ax5.grid(axis='y', alpha=0.3)
+for i, (v, fn) in enumerate(zip(recalls, fns)):
+    ax5.text(i, v + 0.02, f'{v:.1%}\n({fn} FN)', ha='center', 
+             fontweight='bold', fontsize=10)
+
+# Plot 6: ROC Curve
+ax6 = fig.add_subplot(gs[2, 1])
+fpr_std, tpr_std, _ = roc_curve(y_test, y_pred_proba_std)
+fpr_wt, tpr_wt, _ = roc_curve(y_test, y_pred_proba_wt)
+
+ax6.plot(fpr_std, tpr_std, linewidth=2, label=f'Standard (AUC={roc_auc_std:.3f})', 
+         color='#f39c12')
+ax6.plot(fpr_wt, tpr_wt, linewidth=2, label=f'Weighted (AUC={roc_auc_wt:.3f})', 
+         color='#2ecc71')
+ax6.plot([0, 1], [0, 1], 'k--', linewidth=1, alpha=0.5)
+ax6.fill_between(fpr_wt, tpr_wt, alpha=0.3, color='#2ecc71')
+ax6.set_xlabel('False Positive Rate', fontweight='bold', fontsize=11)
+ax6.set_ylabel('True Positive Rate (Recall)', fontweight='bold', fontsize=11)
+ax6.set_title('ROC Curve Comparison', fontweight='bold', fontsize=13)
+ax6.legend(fontsize=10)
+ax6.grid(True, alpha=0.3)
+
+# Plot 7: Threshold Impact
+ax7 = fig.add_subplot(gs[2, 2])
+ax7.plot(threshold_df['Threshold'], threshold_df['Recall'],
+         'o-', linewidth=2, markersize=8, label='Recall', color='#e74c3c')
+ax7.plot(threshold_df['Threshold'], threshold_df['Precision'],
+         's-', linewidth=2, markersize=8, label='Precision', color='#3498db')
+ax7.plot(threshold_df['Threshold'], threshold_df['F1'],
+         '^-', linewidth=2, markersize=8, label='F1-Score', color='#2ecc71')
+ax7.axvline(x=optimal_medical_threshold, color='purple', linestyle='--',
+            linewidth=2, alpha=0.7, label=f'Optimal ({optimal_medical_threshold})')
+ax7.set_xlabel('Decision Threshold', fontweight='bold', fontsize=11)
+ax7.set_ylabel('Score', fontweight='bold', fontsize=11)
+ax7.set_title('Medical Threshold Tuning', fontweight='bold', fontsize=13)
+ax7.legend(fontsize=9)
+ax7.grid(True, alpha=0.3)
+
+# Plot 7: Threshold Impact
+ax7 = fig.add_subplot(gs[2, 2])
+ax7.plot(threshold_df['Threshold'], threshold_df['Recall'],
+         'o-', linewidth=2, markersize=8, label='Recall', color='#e74c3c')
+ax7.plot(threshold_df['Threshold'], threshold_df['Precision'],
+         's-', linewidth=2, markersize=8, label='Precision', color='#3498db')
+ax7.plot(threshold_df['Threshold'], threshold_df['F1'],
+         '^-', linewidth=2, markersize=8, label='F1-Score', color='#2ecc71')
+ax7.axvline(x=optimal_medical_threshold, color='purple', linestyle='--',
+            linewidth=2, alpha=0.7, label=f'Optimal ({optimal_medical_threshold})')
+ax7.set_xlabel('Decision Threshold', fontweight='bold', fontsize=11)
+ax7.set_ylabel('Score', fontweight='bold', fontsize=11)
+ax7.set_title('Medical Threshold Tuning', fontweight='bold', fontsize=13)
+ax7.legend(fontsize=9)
+ax7.grid(True, alpha=0.3)
+
+
+# Plot 8: Clinical Impact Summary
+ax8 = fig.add_subplot(gs[3, :])
+ax8.axis('off')
+
+impact_text = f"""
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                       CLINICAL IMPACT SUMMARY                                 ║
+╠═══════════════════════════════════════════════════════════════════════════════╣
+║                                                                               ║
+║  WITHOUT SCREENING:                                                           ║
+║  • Undetected disease cases: {disease_patients_total:,}                                       ║
+║  • Late-stage treatment cost: ₹{cost_no_screening/1e7:.2f} crore                                    ║
+║  • Preventable deaths: ~{int(disease_patients_total * 0.3):,}                                        ║
+║                                                                               ║
+║  WITH OPTIMIZED SCREENING (Threshold={optimal_medical_threshold}):                              ║
+║  • Patients screened: {annual_patients:,} annually                                    ║
+║  • Disease detected early: {detected_disease:,} ({recall_optimal:.1%} catch rate)                    ║
+║  • Missed diagnoses: {missed_disease:,} ({fn_opt} in test set)                                  ║
+║  • False alarms: {false_alarms:,} (get follow-up tests)                              ║
+║  • Total program cost: ₹{total_cost_with_screening/1e7:.2f} crore                                   ║
+║  • NET BENEFIT: ₹{net_benefit/1e7:.2f} crore                                              ║
+║  • Lives saved: ~{lives_saved:,}                                                   ║
+║                                                                               ║
+║  ROI: {roi:.0f}% (₹{roi/100:.1f} saved per ₹1 spent)                                          ║
+║  Cost per life saved: ₹{total_cost_with_screening/lives_saved:,.0f}                                        ║
+║                                                                               ║
+║  MEDICAL METRICS (Optimized Model):                                           ║
+║  • Recall: {recall_optimal:.1%} (catching {recall_optimal*100:.0f}% of disease cases)                     ║
+║  • Precision: {precision_optimal:.1%} ({precision_optimal*100:.0f}% of positive predictions are correct)          ║
+║  • False Negative Rate: {fn_opt/y_test.sum()*100:.1f}% (missed {fn_opt} out of {int(y_test.sum())} disease cases)        ║
+║                                                                               ║
+║  RECOMMENDATION: Deploy optimized screening program                           ║
+║  • Use threshold = {optimal_medical_threshold} (prioritize catching disease)                  ║
+║  • Annual screening for at-risk populations (age 40+)                         ║
+║  • Follow-up protocol for positive screens                                    ║
+║                                                                               ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+"""
+
+ax8.text(0.5, 0.5, impact_text, transform=ax8.transAxes,
+         fontsize=10, verticalalignment='center', horizontalalignment='center',
+         family='monospace', fontweight='bold',
+         bbox=dict(boxstyle='round', facecolor='lightgreen', alpha=0.8))
+
+plt.suptitle('HEART DISEASE SCREENING - COMPLETE CLINICAL ANALYSIS',
+             fontsize=18, fontweight='bold', y=0.995)
+plt.savefig('07_medical_diagnosis_complete.png', dpi=300, bbox_inches='tight')
+plt.close()
+print("\n✅ Saved: 07_medical_diagnosis_complete.png")
+
+# CLINICAL DEPLOYMENT PROTOCOL
+
+print("\n" + "="*70)
+print("STEP 9: CLINICAL DEPLOYMENT PROTOCOL")
+print("="*70)
+
+protocol = f"""
+🏥 SCREENING PROGRAM DEPLOYMENT
+
+TARGET POPULATION:
+  → Adults aged 40+ years
+  → High-risk groups (family history, diabetes, hypertension)
+  → Annual screening recommended
+
+SCREENING PROCESS:
+  1. Collect patient data (9 clinical measurements)
+  2. Model predicts disease probability
+  3. Decision protocol based on probability:
+
+     P(Disease) >= {optimal_medical_threshold} → POSITIVE SCREEN
+     ├─→ Schedule follow-up tests within 2 weeks
+     ├─→ ECG, stress test, coronary angiography
+     └─→ Cardiologist consultation
+
+     P(Disease) < {optimal_medical_threshold} → NEGATIVE SCREEN
+     ├─→ Routine follow-up in 1 year
+     ├─→ Lifestyle counseling
+     └─→ Risk factor management
+
+FALSE POSITIVE MANAGEMENT:
+  • ~{false_alarms:,} patients annually require follow-up
+  • Cost: ₹{followup_cost_total/1e7:.2f} crore (acceptable given lives saved)
+  • Patient education: "Better safe than sorry"
+  • Minimize anxiety with clear communication
+
+FALSE NEGATIVE MONITORING:
+  • Expected {missed_disease:,} missed cases annually
+  • Continuous model improvement with new data
+  • Symptom-based referral system as backup
+  • Regular model retraining (quarterly)
+
+PERFORMANCE MONITORING:
+  Weekly:
+  • Track screening volume
+  • Monitor follow-up completion rates
+  • Flag unusual patterns
+
+  Monthly:
+  • Precision, recall, false negative rate
+  • Compare predictions vs confirmed diagnoses
+  • Cost analysis
+
+  Quarterly:
+  • Retrain model with new patient data
+  • Update risk factors and coefficients
+  • Validate on held-out test set
+
+EXPECTED OUTCOMES:
+  ✅ Detect {recall_optimal:.0%} of disease cases early
+  ✅ Save ~{lives_saved:,} lives annually
+  ✅ Reduce late-stage treatment costs by ₹{net_benefit/1e7:.2f} crore
+  ✅ {roi:.0f}% ROI on screening program
+
+ETHICAL CONSIDERATIONS:
+  • Patient consent for AI-assisted screening
+  • Transparent explanation of model limitations
+  • Human oversight: cardiologist reviews all positives
+  • Regular bias audits (age, gender, ethnicity)
+  • Privacy: HIPAA-compliant data handling
+"""
+
+print(protocol)
+
+# Save detailed report
+with open('medical_diagnosis_report.txt', 'w', encoding='utf-8') as f:
+    f.write("HEART DISEASE SCREENING - DETAILED REPORT\n")
+    f.write("="*70 + "\n\n")
+    f.write("Model Performance:\n")
+    f.write(f"  Recall: {recall_optimal:.1%}\n")
+    f.write(f"  Precision: {precision_optimal:.1%}\n")
+    f.write(f"  F1-Score: {f1_optimal:.3f}\n")
+    f.write(f"  Optimal Threshold: {optimal_medical_threshold}\n\n")
+    f.write("Clinical Impact:\n")
+    f.write(f"  Net Benefit: ₹{net_benefit/1e7:.2f} crore annually\n")
+    f.write(f"  Lives Saved: {lives_saved:,}\n")
+    f.write(f"  ROI: {roi:.0f}%\n")
+    f.write(f"  False Negatives: {missed_disease:,}\n\n")
+    f.write("Top Risk Factors:\n")
+    for idx, row in feature_importance.head(9).iterrows():
+        f.write(f"  {row['Feature']}: {row['Coefficient_Weighted']:.4f}\n")
+
+print("\n✅ Saved detailed report: medical_diagnosis_report.txt")
+
+print("\n" + "="*70)
+print("PROJECT 3 COMPLETE: MEDICAL DIAGNOSIS CLASSIFIER")
+print("="*70)

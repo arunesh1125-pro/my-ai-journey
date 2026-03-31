@@ -1,0 +1,23 @@
+LOAN APPROVAL SYSTEM - DEPLOYMENT REPORT
+================================================================================
+
+Model: Decision Tree Classifier
+Best Parameters: {'criterion': 'gini', 'max_depth': 3, 'min_samples_leaf': 10, 'min_samples_split': 20}
+
+Performance:
+  Test Accuracy: 99.3%
+  Precision: 0.0%
+  Recall: 0.0%
+  F1-Score: 0.000
+
+Business Impact:
+  Annual Savings: ₹4.12 crore
+  ROI: 218%
+  Processing Time: 3 days → 10 minutes
+
+Top 5 Features:
+  PropertyValue: 0.6307
+  DebtToIncome: 0.1466
+  EmploymentYears: 0.0775
+  MonthlyIncome: 0.0770
+  CreditScore: 0.0682

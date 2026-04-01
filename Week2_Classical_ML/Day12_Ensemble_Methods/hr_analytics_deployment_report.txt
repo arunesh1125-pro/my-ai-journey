@@ -1,0 +1,29 @@
+HR EMPLOYEE ATTRITION PREDICTION - DEPLOYMENT REPORT
+================================================================================
+
+MODEL COMPARISON:
+              Model  Accuracy  Precision   Recall  F1-Score  ROC-AUC  TP  FP  FN  TN
+Logistic Regression  0.972789   0.854545 1.000000  0.921569 0.999139  47   8   0 239
+      Decision Tree  0.806122   0.439024 0.765957  0.558140 0.864631  36  46  11 201
+      Random Forest  0.870748   0.573770 0.744681  0.648148 0.927642  35  26  12 221
+            XGBoost  0.942177   0.875000 0.744681  0.804598 0.983030  35   5  12 242
+
+BEST MODEL: Logistic Regression
+Hyperparameters: {'C': 1.0, 'class_weight': 'balanced', 'dual': False, 'fit_intercept': True, 'intercept_scaling': 1, 'l1_ratio': 0.0, 'max_iter': 1000, 'n_jobs': None, 'penalty': 'deprecated', 'random_state': 42, 'solver': 'lbfgs', 'tol': 0.0001, 'verbose': 0, 'warm_start': False}
+
+BUSINESS IMPACT:
+  Net Annual Benefit: ₹17.61 crore
+  Employees Saved: 141
+  ROI: 497%
+
+TOP 10 ATTRITION DRIVERS:
+  MonthlyIncome: 6.3755
+  PromotionGap: 1.8659
+  OverTime: 1.7951
+  YearsAtCompany: 1.7154
+  Age: 1.6781
+  MaritalStatus_Single: 1.3856
+  DistanceFromHome: 1.3416
+  JobSatisfaction: 1.1917
+  SatisfactionScore: 0.9817
+  BusinessTravel: 0.8826

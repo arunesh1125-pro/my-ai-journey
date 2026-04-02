@@ -1,0 +1,20 @@
+CUSTOMER SEGMENTATION - DEPLOYMENT REPORT
+================================================================================
+
+Algorithm: K-Means Clustering
+Optimal K: 4
+Silhouette Score: 0.261
+
+Cluster Profiles:
+          Age  AnnualIncome  AnnualSpending  PurchaseFrequency  DaysSinceLastPurchase  AvgOrderValue  SpendingRatio
+Cluster                                                                                                            
+0        29.0       54622.0          9430.0               15.0                   18.0          630.0            0.0
+1        39.0       74247.0         29230.0               12.0                   20.0         2582.0            0.0
+2        42.0      150271.0         45903.0               24.0                   15.0         1881.0            0.0
+3        37.0      108148.0         18875.0               10.0                   35.0         1936.0            0.0
+
+Business Impact:
+  Annual Benefit: ₹3.47 crore
+  ROI: 123%
+  Revenue Increase: 113%
+  Cost Reduction: 53%

@@ -89,7 +89,7 @@ Two Popular Methods:
 ALGORITHM PICKS: Question that gives LOWEST impurity after split!
 """)
 
-# VISULA DEMONSTARTION
+# VISUAL DEMONSTARTION
 
 print("\n" + "="*70)
 print("VISUAL DEMONSTRATION")
@@ -139,3 +139,131 @@ plt.tight_layout()
 plt.savefig('01_decision_tree_visualization.png', dpi=300, bbox_inches='tight')
 plt.close()
 print("✅ Saved: 01_decision_tree_visualization.png")
+
+# ADVANTAGES & DISADVANTAGES
+
+print("\n" + "="*70)
+print("DECISION TREES: PROS & CONS")
+print("="*70)
+
+print("""
+✅ ADVANTAGES:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. EASY TO UNDERSTAND & INTERPRET
+   → Can draw the tree and explain to non-technical stakeholders
+   → "Why was loan rejected? Because income < ₹50K AND age < 25"
+
+2. NO DATA PREPROCESSING NEEDED
+   → Works with different scales (no standardization!)
+   → Handles missing values well
+   → Works with categorical data directly
+
+3. HANDLES NON-LINEAR RELATIONSHIPS
+   → Can capture complex patterns
+   → Unlike linear/logistic regression
+
+4. FEATURE IMPORTANCE
+   → Automatically tells you which features matter most
+   → Great for feature selection
+
+5. WORKS FOR CLASSIFICATION & REGRESSION
+   → Same algorithm, different tasks
+
+
+❌ DISADVANTAGES:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. OVERFITTING (BIGGEST PROBLEM!)
+   → Without limits, tree memorizes training data
+   → Poor generalization to test data
+   
+   Solution: Hyperparameter tuning
+   • max_depth: Limit tree depth
+   • min_samples_split: Minimum samples to split
+   • min_samples_leaf: Minimum samples in leaf
+
+2. UNSTABLE
+   → Small changes in data → Completely different tree
+   
+   Solution: Use ensemble methods (Random Forest, tomorrow!)
+
+3. BIASED TOWARD FEATURES WITH MORE CATEGORIES
+   → Feature with 100 values favored over feature with 2 values
+   
+   Solution: Use Random Forest or balanced splitting
+
+4. NOT GREAT FOR LINEAR RELATIONSHIPS
+   → Approximates straight line with stairs
+   
+   When to use Linear Regression instead: If relationship is clearly linear
+
+
+WHEN TO USE DECISION TREES:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Use When:
+- Need interpretable model (explain to business)
+- Non-linear relationships
+- Mixed data types (numerical + categorical)
+- Feature importance matters
+- Quick prototyping
+
+❌ Avoid When:
+- Need very high accuracy (use ensemble instead)
+- Linear relationships (use Linear/Logistic Regression)
+- High-dimensional sparse data (use Naive Bayes/SVM)
+""")
+
+# KEY HYPERPARAMETERS
+
+print("\n" + "="*70)
+print("KEY HYPERPARAMETERS (Prevent Overfitting)")
+print("="*70)
+
+hyperparams = """
+MOST IMPORTANT HYPERPARAMETERS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. max_depth (default: None)
+   → Maximum depth of tree
+   → Higher = more complex (overfitting risk)
+   → Start with: 3-10 for most problems
+   
+2. min_samples_split (default: 2)
+   → Minimum samples required to split a node
+   → Higher = simpler tree
+   → Start with: 20-50
+   
+3. min_samples_leaf (default: 1)
+   → Minimum samples required in a leaf
+   → Higher = smoother boundaries
+   → Start with: 10-30
+   
+4. max_features (default: None)
+   → Number of features to consider for best split
+   → Lower = more randomness (good!)
+   → Use: 'sqrt' for classification, 'log2' also good
+   
+5. criterion (default: 'gini')
+   → 'gini' or 'entropy'
+   → Gini is faster, entropy slightly more accurate
+   → In practice: Not much difference
+
+TUNING STRATEGY:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Start Simple → Add Complexity:
+
+Step 1: max_depth=3 (simple tree)
+Step 2: If underfitting, increase to 5, 7, 10
+Step 3: If overfitting, add min_samples_split=20
+Step 4: Add min_samples_leaf=10
+Step 5: Use cross-validation to find best combo
+"""
+
+print(hyperparams)
+
+print("\n" + "="*70)
+print("SESSION 1 COMPLETE: Concepts Understood!")
+print("="*70)

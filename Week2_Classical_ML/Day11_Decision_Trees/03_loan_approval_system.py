@@ -85,21 +85,22 @@ dependents = np.random.poisson(1, n_applications).clip(0, 5)
 
 # Calculate approval probability (realistic business logic)
 approval_logit = (
-    -5.0 +
+    -1.5 +
     0.03 * (age - 30) +  # Age matters (sweet spot 30-50)
-    0.000002 * annual_income +  # Higher income = better
-    0.05 * employment_years +  # Stable employment
-    0.008 * (credit_score - 600) +  # Credit score critical
-    -4 * debt_to_income +  # High DTI = risky
-    -0.3 * existing_loans +  # Too many loans = risky
-    -0.0000005 * loan_amount +  # Large loans = higher risk
-    0.5 * education +  # Education helps
-    0.3 * marital_status +  # Married = stable
-    -0.2 * dependents  # More dependents = expenses
+    0.000003 * annual_income +  # Higher income = better
+    0.06 * employment_years +  # Stable employment
+    0.010 * (credit_score - 600) +  # Credit score critical
+    -2.5 * debt_to_income +  # High DTI = risky
+    -0.25 * existing_loans +  # Too many loans = risky
+    -0.0000003 * loan_amount +  # Large loans = higher risk
+    0.4 * education +  # Education helps
+    0.25 * marital_status +  # Married = stable
+    -0.15 * dependents  # More dependents = expenses
 )
 
 approval_probability = 1 / (1 + np.exp(-approval_logit))
-loan_approved = (approval_probability > np.random.uniform(0, 1, n_applications)).astype(int)
+loan_approved = np.random.binomial(1, approval_probability)
+#loan_approved = (approval_probability > np.random.uniform(0, 1, n_applications)).astype(int)
 
 # Create DataFrame
 df = pd.DataFrame({
@@ -202,12 +203,13 @@ print("🔍 Testing combinations of hyperparameters...")
 print(f"Total combinations: {len(param_grid['max_depth']) * len(param_grid['min_samples_split']) * len(param_grid['min_samples_leaf']) * len(param_grid['criterion'])}")
 
 # Grid Search with Cross-Validation
-tree_model = DecisionTreeClassifier(random_state=42)
+tree_model = DecisionTreeClassifier(class_weight='balanced', random_state=42)
 grid_search = GridSearchCV(
     tree_model,
     param_grid,
     cv=5,
-    scoring='f1',  # Balance precision and recall
+    scoring='recall',
+    #scoring='f1',  # Balance precision and recall
     n_jobs=-1, # This parameter tells the function to use all available CPU cores to run the different parameter combinations in parallel, significantly speeding up the search process.
     verbose=1 # : This controls how much information is printed to the console during execution. A value of 1 provides basic progress updates. 
 )
@@ -232,6 +234,7 @@ print("="*80)
 # Predictions
 y_pred_train = best_tree.predict(X_train)
 y_pred_test = best_tree.predict(X_test)
+
 
 # Metrics
 train_acc = accuracy_score(y_train, y_pred_train)

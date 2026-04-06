@@ -11,6 +11,9 @@ import plotly.express as px
 import plotly.graph_objects as go
 import joblib
 from datetime import datetime
+import os
+from pathlib import Path
+BASE_DIR = Path(__file__).resolve().parent
 
 # PAGE CONFIGURATION
 
@@ -117,23 +120,85 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# LOAD DATA & MODELS
+# ============================================
+# LOAD DATA & MODELS (WITH AUTO-GENERATION)
+# ============================================
 
+import os
 @st.cache_data
 def load_data():
-    df = pd.read_csv('data/retail_data.csv')
-    return df
+    data_path = BASE_DIR / 'data' / 'retail_data.csv'
+
+    if not data_path.exists():
+        st.warning("📊 Data not found. Generating...")
+
+        import subprocess
+        result = subprocess.run(
+            ['python', str(BASE_DIR / 'data' / 'generate_data.py')],
+            capture_output=True,
+            text=True
+        )
+
+        if result.returncode != 0:
+            st.error(result.stderr)
+            st.stop()
+
+    return pd.read_csv(data_path)
+
 @st.cache_resource
 def load_models():
-    revenue_model = joblib.load('models/revenue_model.pkl')
-    churn_model = joblib.load('models/churn_model.pkl')
-    segment_model = joblib.load('models/segment_model.pkl')
-    scaler = joblib.load('models/scaler.pkl')
+    model_dir = BASE_DIR / "models"
+
+    model_files = [
+        model_dir / 'revenue_model.pkl',
+        model_dir / 'churn_model.pkl',
+        model_dir / 'segment_model.pkl',
+        model_dir / 'scaler.pkl'
+    ]
+
+    missing = [str(f.name) for f in model_files if not f.exists()]
+
+    if missing:
+        st.warning("🤖 Models missing. Training automatically...")
+        st.info(f"Missing: {', '.join(missing)}")
+
+        import subprocess
+        result = subprocess.run(
+            ['python', str(model_dir / 'train_models.py')],
+            capture_output=True,
+            text=True
+        )
+
+        if result.returncode != 0:
+            st.error(result.stderr)
+            st.stop()
+
+    revenue_model = joblib.load(model_dir / 'revenue_model.pkl')
+    churn_model = joblib.load(model_dir / 'churn_model.pkl')
+    segment_model = joblib.load(model_dir / 'segment_model.pkl')
+    scaler = joblib.load(model_dir / 'scaler.pkl')
+
     return revenue_model, churn_model, segment_model, scaler
 
 # Load everything
-df = load_data()
-revenue_model, churn_model, segment_model, scaler = load_models()
+try:
+    df = load_data()
+    revenue_model, churn_model, segment_model, scaler = load_models()
+except Exception as e:
+    st.error(f"❌ Error loading resources: {str(e)}")
+    st.info("""
+    **Troubleshooting Steps:**
+    
+    1. Ensure you're in the project root directory
+    2. Run manually:
+```bash
+       cd data && python generate_data.py && cd ..
+       cd models && python train_models.py && cd ..
+       streamlit run app.py
+```
+    """)
+    st.stop()
+
 
 # ============================================
 # ENHANCED SIDEBAR
@@ -190,7 +255,7 @@ Arunesh Kumar R
 [GitHub](https://github.com/arunesh1125-pro) | [LinkedIn](https://www.linkedin.com/in/arunesh-kumar--r/)
 
 **📧 Contact:**  
-arunesh1125.com
+arunesh1125@gmail.com
 """)
 
 st.sidebar.markdown("---")
@@ -201,7 +266,7 @@ st.sidebar.caption("© 2026 AI BI Platform | v1.0.0")
 if page == "🏠 Dashboard":
     st.markdown('<p class="main-header">🚀 AI-Powered Business Intelligence Platform</p>',
                 unsafe_allow_html=True)
-    st.markdown('<p class=="sub-header">Real-time ML insights for dat-driven decisions</p>',
+    st.markdown('<p class="sub-header">Real-time ML insights for dat-driven decisions</p>',
                 unsafe_allow_html=True)
     
     # Key Metrics
@@ -242,7 +307,7 @@ if page == "🏠 Dashboard":
     st.markdown("---")
 
     # Charts
-    col1, col2 = st.colums(2)
+    col1, col2 = st.columns(2)
 
     with col1:
         st.subheader("📊 Revenue Distribution")
@@ -668,7 +733,7 @@ elif page == "📊 Model Performance":
     tab1, tab2 = st.tabs(["Revenue Drivers", "Churn Drivers"])
     
     with tab1:
-        feat_imp_rev = pd.read_csv('models/feature_importance_revenue.csv').head(10)
+        feat_imp_rev = pd.read_csv(BASE_DIR / 'models' / 'feature_importance_revenue.csv').head(10)
         fig = px.bar(feat_imp_rev, x='Importance', y='Feature', orientation='h',
                     title="Top 10 Revenue Drivers",
                     color='Importance', color_continuous_scale='viridis')
@@ -676,7 +741,7 @@ elif page == "📊 Model Performance":
         st.plotly_chart(fig, use_container_width=True)
     
     with tab2:
-        feat_imp_churn = pd.read_csv('models/feature_importance_churn.csv').head(10)
+        feat_imp_churn = pd.read_csv(BASE_DIR / 'models' / 'feature_importance_churn.csv').head(10)
         fig = px.bar(feat_imp_churn, x='Importance', y='Feature', orientation='h',
                     title="Top 10 Churn Drivers",
                     color='Importance', color_continuous_scale='reds')
@@ -785,9 +850,6 @@ elif page == "📤 Batch Predictions":
             # Process button
             if st.button("🚀 Generate Predictions", type="primary"):
                 with st.spinner("Processing predictions..."):
-                    # Import batch processor
-                    import sys
-                    sys.path.append('.')
                     from utils.batch_processor import process_batch_predictions
                     
                     # Generate predictions
@@ -951,16 +1013,16 @@ elif page == "ℹ️ About":
     
     ### 👨‍💻 Developer
     
-    **Name:** Your Full Name  
+    **Name:** Arunesh Kumar R 
     **Role:** ML Engineer & Data Scientist  
-    **Education:** [Your Degree/Institution]  
-    **Location:** Tamil Nadu, India
+    **Education:** B.Tech - Artificial Intelligence and Data Science
+    **Location:** Coimbatore, Tamil Nadu, India
     
     **Connect:**
-    - 📧 Email: your.email@example.com
-    - 💼 LinkedIn: [linkedin.com/in/yourprofile](https://linkedin.com/in/yourprofile)
-    - 🐙 GitHub: [github.com/yourusername](https://github.com/yourusername)
-    - 🌐 Portfolio: [yourwebsite.com](https://yourwebsite.com)
+    - 📧 Email: arunesh1125@gmail.com
+    - 💼 LinkedIn: [linkedin.com/in/arunesh-kumar--r](https://www.linkedin.com/in/arunesh-kumar--r/)
+    - 🐙 GitHub: [github.com/arunesh1125-pro](https://github.com/arunesh1125-pro)
+
     
     ### 📚 Project Background
     
@@ -1018,18 +1080,38 @@ elif page == "ℹ️ About":
         st.markdown("""
         **Clone & Run Locally:**
 ```bash
-        git clone https://github.com/yourusername/ai-bi-platform
-        cd ai-bi-platform
+        git clone https://github.com/arunesh1125-pro/my-ai-journey/tree/main/Week2_Classical_ML/Week2_Capstone_Production
+        cd Week2_Capstone_Production
         pip install -r requirements.txt
         streamlit run app.py
 ```
         
         **Project Structure:**
-    ├── app.py              # Main application
-    ├── data/               # Data generation
-    ├── models/             # Trained ML models
-    ├── utils/              # Helper functions
-    └── requirements.txt    # Dependencies
+        Week2_Capstone_Production/
+        │
+        ├── app.py
+        ├── requirements.txt
+        ├── packages.txt
+        │
+        ├── data/
+        │   ├── generate_data.py
+        │   └── retail_data.csv
+        │
+        ├── models/
+        │   ├── train_models.py
+        │   ├── revenue_model.pkl
+        │   ├── churn_model.pkl
+        │   ├── segment_model.pkl
+        │   ├── scaler.pkl
+        │   ├── feature_importance_revenue.csv
+        │   └── feature_importance_churn.csv
+        │
+        ├── utils/
+        │   └── batch_processor.py
+        │
+        └── .streamlit/
+            └── config.toml
+
         """)
     
     with st.expander("🎓 For Recruiters"):

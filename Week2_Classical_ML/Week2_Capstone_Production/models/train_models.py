@@ -9,6 +9,13 @@ import numpy as np
 import joblib # It has set of tools to optimize the large datasets of numpy arrays
 
 import os
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+DATA_PATH = BASE_DIR / "data" / "retail_data.csv"
+MODEL_DIR = BASE_DIR / "models"
+MODEL_DIR.mkdir(exist_ok=True)
+
 os.environ["LOKY_MAX_CPU_COUNT"] = "4"
 
 from sklearn.model_selection import train_test_split
@@ -25,7 +32,7 @@ print("="*70)
 
 # LOAD DATA
 
-df = pd.read_csv('../data/retail_data.csv')
+df = pd.read_csv(DATA_PATH)
 print(f"\n✅ Loaded {len(df)} records")
 
 # PREPARE FEATURES
@@ -145,9 +152,16 @@ for i in range(4):
     print(f"   Cluster {i}: {count:,} customers ({count/len(df)*100:.1f}%)")
 
 # Save
-joblib.dump(kmeans, 'segement_model.pkl')
-joblib.dump(scaler, 'scaler.pkl')
-print(f"  Saved: segment_model.pkl, scaler.pkl")
+import os
+os.makedirs("models", exist_ok=True)
+
+joblib.dump(kmeans, MODEL_DIR / 'segment_model.pkl')
+joblib.dump(rf_revenue, MODEL_DIR / 'revenue_model.pkl')
+joblib.dump(rf_churn, MODEL_DIR / 'churn_model.pkl')
+joblib.dump(scaler, MODEL_DIR / 'scaler.pkl')
+
+print("  Saved: segment_model.pkl")
+print("  Saved: scaler.pkl")
 
 # SAVE FEATURE IMPORTANCE
 
@@ -161,14 +175,14 @@ feature_importance_churn = pd.DataFrame({
     'Importance': rf_churn.feature_importances_
 }).sort_values('Importance', ascending=False)
 
-feature_importance_revenue.to_csv('feature_importance_revenue.csv', index=False)
-feature_importance_churn.to_csv('feature_importance_churn.csv', index=False)
+feature_importance_revenue.to_csv(MODEL_DIR / 'feature_importance_revenue.csv', index=False)
+feature_importance_churn.to_csv(MODEL_DIR / 'feature_importance_churn.csv', index=False)
 
 print("\n✅ Feature importance saved")
 
 # SAVE UPDATED DATA (with clusters)
 
-df.to_csv('retail_data_with_predictions.csv', index=False)
+df.to_csv(MODEL_DIR / 'retail_data_with_predictions.csv', index=False)
 print(f"\n✅ Updated data saved with cluster labels")
 
 print("\n" + "="*70)

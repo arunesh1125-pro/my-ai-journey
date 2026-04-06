@@ -8,6 +8,11 @@ import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
 
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+DATA_PATH = BASE_DIR / "retail_data.csv"
+
 print("Generating Comprehensive Retail Dataset...")
 
 np.random.seed(42)
@@ -129,7 +134,7 @@ df = pd.DataFrame({
 
 # SAVE DATA
 
-df.to_csv('retail_data.csv', index=False)
+df.to_csv(DATA_PATH, index=False)
 print(f"✅ Generated {len(df)} customer records")
 print(f"✅ Saved to: retail_data.csv")
 

@@ -486,3 +486,42 @@ print("✅ Model loaded successfully")
 # Verify it works
 test_pred = loaded_model.predict(X_xor, verbose=0)
 print(f"✅ Loaded model predictions match: {np.allclose(predictions, test_pred)}")
+
+# VISUALIZATION
+# ============================================
+
+print("\n" + "="*80)
+print("CREATING VISUALIZATIONS")
+print("="*80)
+
+fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+# Plot 1: Training History
+axes[0].plot(history.history['loss'], linewidth=2, color='#e74c3c', label='Training Loss')
+axes[0].set_xlabel('Epoch', fontweight='bold', fontsize=11)
+axes[0].set_ylabel('Loss (Binary Crossentropy)', fontweight='bold', fontsize=11)
+axes[0].set_title('Keras Training Loss', fontweight='bold', fontsize=13)
+axes[0].legend(fontsize=10)
+axes[0].grid(True, alpha=0.3)
+axes[0].set_yscale('log')
+
+# Plot 2: Accuracy
+axes[1].plot(history.history['accuracy'], linewidth=2, color='#2ecc71', label='Training Accuracy')
+axes[1].set_xlabel('Epoch', fontweight='bold', fontsize=11)
+axes[1].set_ylabel('Accuracy', fontweight='bold', fontsize=11)
+axes[1].set_title('Keras Training Accuracy', fontweight='bold', fontsize=13)
+axes[1].legend(fontsize=10)
+axes[1].grid(True, alpha=0.3)
+axes[1].axhline(y=1.0, color='green', linestyle='--', linewidth=2, alpha=0.5, label='Perfect (100%)')
+
+plt.suptitle('KERAS XOR NETWORK TRAINING', fontsize=15, fontweight='bold', y=1.02)
+plt.tight_layout()
+plt.savefig('01_keras_training.png', dpi=300, bbox_inches='tight')
+plt.close()
+
+print("✅ Saved: 01_keras_training.png")
+
+print("\n" + "="*80)
+print("SESSION 1 COMPLETE: TensorFlow/Keras Fundamentals Mastered!")
+print("="*80)
+print("\n☕ Take a 15-minute break before Fashion MNIST!")

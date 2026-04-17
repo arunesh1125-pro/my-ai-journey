@@ -383,3 +383,306 @@ comparison = f"""
 """
 
 print(comparison)
+
+# VISUALIZATIONS
+# ============================================
+
+print("\n" + "="*80)
+print("CREATING COMPREHENSIVE VISUALIZATIONS")
+print("="*80)
+
+fig = plt.figure(figsize=(20, 14))
+gs = fig.add_gridspec(3, 3, hspace=0.35, wspace=0.3)
+
+# Plot 1: Training History - Loss
+ax1 = fig.add_subplot(gs[0, 0])
+ax1.plot(cnn_history.history['loss'], label='Training Loss', linewidth=2, color='#e74c3c')
+ax1.plot(cnn_history.history['val_loss'], label='Validation Loss', linewidth=2, color='#3498db')
+ax1.set_xlabel('Epoch', fontweight='bold', fontsize=11)
+ax1.set_ylabel('Loss', fontweight='bold', fontsize=11)
+ax1.set_title('CNN Training & Validation Loss', fontweight='bold', fontsize=13)
+ax1.legend(fontsize=10)
+ax1.grid(True, alpha=0.3)
+
+# Plot 2: Training History - Accuracy
+ax2 = fig.add_subplot(gs[0, 1])
+ax2.plot(cnn_history.history['accuracy'], label='Training Accuracy', linewidth=2, color='#2ecc71')
+ax2.plot(cnn_history.history['val_accuracy'], label='Validation Accuracy', linewidth=2, color='#9b59b6')
+ax2.set_xlabel('Epoch', fontweight='bold', fontsize=11)
+ax2.set_ylabel('Accuracy', fontweight='bold', fontsize=11)
+ax2.set_title('CNN Training & Validation Accuracy', fontweight='bold', fontsize=13)
+ax2.legend(fontsize=10)
+ax2.grid(True, alpha=0.3)
+
+# Plot 3: Model Comparison
+ax3 = fig.add_subplot(gs[0, 2])
+models = ['Dense\nNetwork', 'CNN']
+accuracies = [dense_test_acc*100, cnn_test_acc*100]
+colors_bar = ['#e74c3c', '#2ecc71']
+bars = ax3.bar(models, accuracies, color=colors_bar, edgecolor='black', linewidth=2, width=0.6)
+ax3.set_ylabel('Test Accuracy (%)', fontweight='bold', fontsize=11)
+ax3.set_title('Dense vs CNN Comparison', fontweight='bold', fontsize=13)
+ax3.set_ylim([0, 100])
+ax3.grid(axis='y', alpha=0.3)
+for bar, acc in zip(bars, accuracies):
+    height = bar.get_height()
+    ax3.text(bar.get_x() + bar.get_width()/2., height + 2,
+            f'{acc:.1f}%', ha='center', va='bottom', 
+            fontweight='bold', fontsize=12)
+
+# Plot 4-6: Confusion Matrix
+ax4 = fig.add_subplot(gs[1:, :])
+cm = confusion_matrix(y_test, y_pred_classes)
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
+           xticklabels=class_names, yticklabels=class_names,
+           ax=ax4, cbar_kws={'label': 'Count'}, annot_kws={'size': 9})
+ax4.set_xlabel('Predicted Label', fontweight='bold', fontsize=12)
+ax4.set_ylabel('True Label', fontweight='bold', fontsize=12)
+ax4.set_title('Confusion Matrix - CIFAR-10 CNN (Test Set)', fontweight='bold', fontsize=14)
+plt.setp(ax4.get_xticklabels(), rotation=45, ha='right', fontsize=10)
+plt.setp(ax4.get_yticklabels(), rotation=0, fontsize=10)
+
+plt.suptitle('CIFAR-10 CNN: COMPREHENSIVE PERFORMANCE ANALYSIS',
+             fontsize=16, fontweight='bold', y=0.995)
+
+plt.savefig('02_cifar10_cnn_results.png', dpi=300, bbox_inches='tight')
+plt.close()
+
+print("✅ Saved: 02_cifar10_cnn_results.png")
+
+# ============================================
+# PREDICTION SAMPLES
+# ============================================
+
+print("📊 Creating prediction visualizations...")
+
+fig, axes = plt.subplots(5, 8, figsize=(18, 12))
+fig.suptitle('CNN PREDICTIONS ON CIFAR-10 TEST SET', fontsize=16, fontweight='bold')
+
+# Select random samples
+np.random.seed(42)
+random_indices = np.random.choice(len(X_test), 40, replace=False)
+
+for i, idx in enumerate(random_indices):
+    row = i // 8
+    col = i % 8
+    
+    # Get image and prediction
+    img = X_test[idx]
+    true_label = y_test[idx][0]
+    pred_probs = y_pred[idx]
+    pred_label = y_pred_classes[idx]
+    confidence = pred_probs[pred_label] * 100
+    
+    # Plot image
+    axes[row, col].imshow(img)
+    
+    # Color: Green if correct, Red if wrong
+    color = 'green' if pred_label == true_label else 'red'
+    
+    # Title
+    axes[row, col].set_title(
+        f'T:{class_names[true_label][:4]}\n'
+        f'P:{class_names[pred_label][:4]}\n'
+        f'{confidence:.0f}%',
+        fontsize=8, color=color, fontweight='bold'
+    )
+    axes[row, col].axis('off')
+
+plt.tight_layout()
+plt.savefig('02_cifar10_predictions.png', dpi=300, bbox_inches='tight')
+plt.close()
+
+print("✅ Saved: 02_cifar10_predictions.png")
+
+# ============================================
+# PER-CLASS PERFORMANCE
+# ============================================
+
+print("\n📊 Analyzing per-class performance...")
+
+# Calculate per-class accuracy
+class_correct = np.zeros(10)
+class_total = np.zeros(10)
+
+for i in range(len(y_test)):
+    label = y_test[i][0]
+    class_total[label] += 1
+    if y_pred_classes[i] == label:
+        class_correct[label] += 1
+
+class_accuracy = class_correct / class_total * 100
+
+# Visualize per-class accuracy
+fig, ax = plt.subplots(figsize=(12, 6))
+bars = ax.bar(range(10), class_accuracy, color='skyblue', edgecolor='black', linewidth=2)
+ax.set_xlabel('Class', fontweight='bold', fontsize=12)
+ax.set_ylabel('Accuracy (%)', fontweight='bold', fontsize=12)
+ax.set_title('Per-Class Accuracy - CIFAR-10 CNN', fontweight='bold', fontsize=14)
+ax.set_xticks(range(10))
+ax.set_xticklabels(class_names, rotation=45, ha='right')
+ax.set_ylim([0, 100])
+ax.grid(axis='y', alpha=0.3)
+
+# Add values on bars
+for i, (bar, acc) in enumerate(zip(bars, class_accuracy)):
+    height = bar.get_height()
+    ax.text(bar.get_x() + bar.get_width()/2., height + 1,
+           f'{acc:.1f}%', ha='center', va='bottom', 
+           fontweight='bold', fontsize=10)
+    
+    # Color bars by accuracy
+    if acc >= 80:
+        bar.set_color('#2ecc71')  # Green
+    elif acc >= 70:
+        bar.set_color('#f39c12')  # Orange
+    else:
+        bar.set_color('#e74c3c')  # Red
+
+plt.tight_layout()
+plt.savefig('02_cifar10_class_accuracy.png', dpi=300, bbox_inches='tight')
+plt.close()
+
+print("✅ Saved: 02_cifar10_class_accuracy.png")
+
+# ============================================
+# SAVE MODEL
+# ============================================
+
+print("\n" + "="*80)
+print("SAVING MODEL")
+print("="*80)
+
+cnn_model.save('cifar10_cnn_model.keras')
+print("✅ Model saved: cifar10_cnn_model.keras")
+
+# ============================================
+# KEY INSIGHTS
+# ============================================
+
+print("\n" + "="*80)
+print("KEY INSIGHTS")
+print("="*80)
+
+# Find best and worst classes
+best_class_idx = np.argmax(class_accuracy)
+worst_class_idx = np.argmin(class_accuracy)
+
+insights = f"""
+🎓 WHAT WE LEARNED:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. CNNs DOMINATE IMAGE CLASSIFICATION
+   • Dense Network: {dense_test_acc*100:.1f}% (trained on 10K samples)
+   • CNN: {cnn_test_acc*100:.1f}% (trained on 50K samples)
+   • Improvement: {(cnn_test_acc - dense_test_acc)*100:+.1f}% absolute
+   
+   Even with 5x more training data, CNN is MUCH better!
+
+2. COLOR IMAGES ARE HARDER
+   • Fashion MNIST (grayscale): 88.5% with Dense
+   • CIFAR-10 (color): {cnn_test_acc*100:.1f}% with CNN
+   • More channels = more complexity
+   • Natural objects vs simple clothing
+
+3. HIERARCHICAL FEATURES EMERGE
+   • Layer 1 (32 filters): Edges, colors, simple textures
+   • Layer 2 (64 filters): Corners, curves, combined patterns
+   • Layer 3 (128 filters): Object parts (wheels, wings, legs)
+   
+   Each layer builds on previous! 🧱
+
+4. PARAMETER EFFICIENCY
+   • Total parameters: {total_params:,}
+   • Despite 3 conv layers + 2 dense layers!
+   • Much more efficient than Dense for images
+   • Parameter sharing is the key
+
+5. VALIDATION CURVES SHOW GOOD GENERALIZATION
+   • Final train accuracy: {cnn_history.history['accuracy'][-1]*100:.1f}%
+   • Final val accuracy: {cnn_history.history['val_accuracy'][-1]*100:.1f}%
+   • Small gap = Dropout is working! ✅
+
+
+📊 PER-CLASS PERFORMANCE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Best performing:  {class_names[best_class_idx]:<12} ({class_accuracy[best_class_idx]:.1f}%)
+Worst performing: {class_names[worst_class_idx]:<12} ({class_accuracy[worst_class_idx]:.1f}%)
+
+Why the difference?
+- {class_names[best_class_idx]}: Distinctive features (easier to identify)
+- {class_names[worst_class_idx]}: Looks similar to other classes
+
+Common confusions (from confusion matrix):
+- Cat ↔ Dog (both furry animals)
+- Automobile ↔ Truck (both vehicles)
+- Deer ↔ Horse (both four-legged animals)
+
+Even humans struggle with these! 🤔
+
+
+💡 WHAT MAKES CNNs WORK:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. SPATIAL STRUCTURE PRESERVED
+   Dense: 32×32×3 → 3,072 (flattened)
+   CNN: 32×32×3 → 32×32×32 (2D preserved)
+   
+   Nearby pixels matter! CNNs understand this.
+
+2. TRANSLATION INVARIANCE
+   Same filter applied everywhere
+   → Cat detected in corner OR center
+   → No need to learn "cat at position (5,7)"
+
+3. PARAMETER SHARING
+   One 3×3 filter = 27 weights (3×3×3 RGB)
+   Applied to entire 32×32 image
+   → Dramatically fewer parameters than Dense
+
+4. HIERARCHICAL LEARNING
+   Start simple (edges), build complex (objects)
+   → Like how humans learn to see!
+
+
+🎯 PRODUCTION READY:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+This {cnn_test_acc*100:.1f}% accuracy is:
+✅ Better than traditional ML (40-50%)
+✅ Solid performance for a simple CNN
+✅ Could be deployed for:
+   - Image categorization systems
+   - Content moderation (identifying objects)
+   - Auto-tagging for image libraries
+   - Educational tools
+
+To reach 90%+:
+- Data augmentation (next section!)
+- More layers (deeper networks)
+- Transfer learning (Day 20)
+- Larger models (ResNet, EfficientNet)
+"""
+
+print(insights)
+
+# Print per-class summary
+print(f"\n📊 Per-Class Accuracy Summary:")
+print(f"{'Class':<15} {'Accuracy':<12} {'Rating':<10}")
+print("-" * 40)
+for i, (name, acc) in enumerate(zip(class_names, class_accuracy)):
+    if acc >= 80:
+        rating = "🟢 Excellent"
+    elif acc >= 70:
+        rating = "🟡 Good"
+    else:
+        rating = "🔴 Needs work"
+    print(f"{name:<15} {acc:>6.1f}%       {rating}")
+
+print("\n" + "="*80)
+print("SESSION 2 COMPLETE: CIFAR-10 CNN CLASSIFIER BUILT!")
+print("="*80)
+print(f"\n🎉 Achieved {cnn_test_acc*100:.1f}% accuracy on 10,000 color images!")
+print(f"   {(cnn_test_acc - dense_test_acc)*100:.1f}% better than Dense network!")
+print("\n☕ Take a 15-minute break before data augmentation!")

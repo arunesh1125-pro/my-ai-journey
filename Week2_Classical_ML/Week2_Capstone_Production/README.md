@@ -6,7 +6,7 @@
 [![Python](https://img.shields.io/badge/Python-3.9+-blue?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white)](https://scikit-learn.org/)
 
-**[🌐 Live Demo](https://ai-bi-platform.streamlit.app)** | **[📹 Video Demo](#)** | **[📊 Portfolio](#)**
+**[🌐 Live Demo](https://ai-bi-platform.streamlit.app/)** | **[📹 Video Demo](#)** | **[📊 Portfolio](#)**
 
 ---
 
@@ -81,7 +81,7 @@ pip or conda
 ```bash
 # Clone repository
 git clone https://github.com/arunesh1125-pro/my-ai-journey/tree/main/Week2_Classical_ML/Week2_Capstone_Production.git
-cd ai-bi-platform
+cd Week2_Capstone_Production
 
 # Install dependencies
 pip install -r requirements.txt

@@ -130,18 +130,8 @@ def load_data():
     data_path = BASE_DIR / 'data' / 'retail_data.csv'
 
     if not data_path.exists():
-        st.warning("📊 Data not found. Generating...")
-
-        import subprocess
-        result = subprocess.run(
-            ['python', str(BASE_DIR / 'data' / 'generate_data.py')],
-            capture_output=True,
-            text=True
-        )
-
-        if result.returncode != 0:
-            st.error(result.stderr)
-            st.stop()
+        st.error("❌ retail_data.csv missing in /data folder")
+        st.stop()
 
     return pd.read_csv(data_path)
 
@@ -159,19 +149,9 @@ def load_models():
     missing = [str(f.name) for f in model_files if not f.exists()]
 
     if missing:
-        st.warning("🤖 Models missing. Training automatically...")
-        st.info(f"Missing: {', '.join(missing)}")
+        st.error(f"❌ Missing model files: {', '.join(missing)}")
+        st.stop()
 
-        import subprocess
-        result = subprocess.run(
-            ['python', str(model_dir / 'train_models.py')],
-            capture_output=True,
-            text=True
-        )
-
-        if result.returncode != 0:
-            st.error(result.stderr)
-            st.stop()
 
     revenue_model = joblib.load(model_dir / 'revenue_model.pkl')
     churn_model = joblib.load(model_dir / 'churn_model.pkl')

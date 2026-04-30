@@ -391,3 +391,167 @@ plt.savefig('02_stock_error_distribution.png', dpi=300, bbox_inches='tight')
 plt.close()
 
 print("✅ Saved: 02_stock_error_distribution.png")
+
+# FUTURE PREDICTION
+# ============================================
+
+print("\n" + "="*80)
+print("PREDICTING NEXT 30 DAYS")
+print("="*80)
+
+print("""
+MULTI-STEP PREDICTION:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Strategy: Iterative prediction
+1. Use last 60 days to predict day 1001
+2. Append prediction to sequence
+3. Use days 2-61 + prediction to predict day 1002
+4. Repeat for 30 days
+
+Note: Uncertainty compounds over time!
+""")
+
+# Get last 60 days
+last_sequence = prices_scaled[-SEQ_LENGTH:].reshape(1, SEQ_LENGTH, 1)
+
+# Predict next 30 days
+future_predictions = []
+current_sequence = last_sequence.copy()
+
+for i in range(30):
+    # Predict next day
+    next_pred = model.predict(current_sequence, verbose=0)
+    future_predictions.append(next_pred[0, 0])
+    
+    # Update sequence (remove oldest, add prediction)
+    current_sequence = np.append(current_sequence[:, 1:, :], 
+                                 next_pred.reshape(1, 1, 1), 
+                                 axis=1)
+
+# Inverse transform predictions
+future_predictions = scaler.inverse_transform(np.array(future_predictions).reshape(-1, 1))
+
+# Create dates for future predictions
+last_date = stock_data['Date'].iloc[-1]
+future_dates = pd.date_range(start=last_date + pd.Timedelta(days=1), periods=30, freq='D')
+
+# Visualize future predictions
+plt.figure(figsize=(15, 6))
+
+# Plot historical data (last 200 days)
+plt.plot(stock_data['Date'].iloc[-200:], stock_data['Price'].iloc[-200:], 
+         label='Historical Price', linewidth=2, color='#2E86AB')
+
+# Plot future predictions
+plt.plot(future_dates, future_predictions, 
+         label='Future Predictions (30 days)', linewidth=2, color='#e74c3c', linestyle='--')
+
+plt.axvline(x=last_date, color='green', linestyle='--', linewidth=2, 
+            alpha=0.5, label='Today')
+plt.xlabel('Date', fontweight='bold', fontsize=12)
+plt.ylabel('Price ($)', fontweight='bold', fontsize=12)
+plt.title('Stock Price: Historical + 30-Day Forecast', fontweight='bold', fontsize=14)
+plt.legend(fontsize=11)
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.savefig('02_stock_future_prediction.png', dpi=300, bbox_inches='tight')
+plt.close()
+
+print("✅ Saved: 02_stock_future_prediction.png")
+
+print(f"\n📊 30-Day Forecast:")
+print(f"   Current price: ${stock_data['Price'].iloc[-1]:.2f}")
+print(f"   Day 1 prediction: ${future_predictions[0][0]:.2f}")
+print(f"   Day 7 prediction: ${future_predictions[6][0]:.2f}")
+print(f"   Day 30 prediction: ${future_predictions[29][0]:.2f}")
+print(f"   Predicted change: ${future_predictions[29][0] - stock_data['Price'].iloc[-1]:.2f}")
+
+# ============================================
+# SAVE MODEL
+# ============================================
+
+print("\n" + "="*80)
+print("SAVING MODEL")
+print("="*80)
+
+model.save('stock_price_lstm.keras')
+print("✅ Model saved: stock_price_lstm.keras")
+
+# ============================================
+# KEY INSIGHTS
+# ============================================
+
+print("\n" + "="*80)
+print("KEY INSIGHTS")
+print("="*80)
+
+insights = f"""
+🎓 WHAT WE LEARNED ABOUT TIME SERIES WITH LSTM:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. SEQUENCE CREATION IS CRITICAL
+   • Sliding window approach (60 days → 1 day)
+   • Each sequence has temporal context
+   • LSTM learns patterns across time
+
+2. PERFORMANCE METRICS
+   • MAE: ${test_mae:.2f} average error
+   • R²: {test_r2:.3f} ({test_r2*100:.1f}% variance explained)
+   • Good fit for stock prediction!
+
+3. LSTM CAPTURES PATTERNS
+   • Trends (gradual increase/decrease)
+   • Seasonality (weekly patterns)
+   • Momentum (recent price movements)
+   • Not magic - can't predict random events!
+
+4. MULTI-STEP PREDICTION UNCERTAINTY
+   • 1-day ahead: Most accurate
+   • 7-day ahead: Less accurate
+   • 30-day ahead: Uncertainty compounds
+   • Use with caution for long-term forecasts
+
+5. NORMALIZATION ESSENTIAL
+   • LSTMs sensitive to input scale
+   • MinMaxScaler to [0, 1]
+   • Always inverse transform for interpretation
+
+
+💡 REAL-WORLD CONSIDERATIONS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ Stock Prediction Limitations:
+- Market is partially random (efficient market hypothesis)
+- News events unpredictable (earnings, Fed decisions, wars)
+- This model only uses price - real models use:
+  - Volume, moving averages, RSI, MACD
+  - News sentiment, social media
+  - Economic indicators
+
+✅ Where LSTM Time Series Works Well:
+- Weather forecasting (more predictable patterns)
+- Energy demand prediction (seasonal patterns)
+- Website traffic forecasting (regular patterns)
+- Inventory demand (business cycles)
+
+
+🚀 PRODUCTION IMPROVEMENTS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+To improve accuracy:
+1. Add more features (volume, technical indicators)
+2. Use longer sequences (90-120 days)
+3. Ensemble multiple models
+4. Attention mechanisms (Transformers!)
+5. External data (news sentiment, economic data)
+"""
+
+print(insights)
+
+print("\n" + "="*80)
+print("SESSION 2 COMPLETE: STOCK PRICE LSTM BUILT!")
+print("="*80)
+print(f"\n🎉 Achieved R² = {test_r2:.3f} and MAE = ${test_mae:.2f}!")
+print(f"   LSTM successfully learned temporal patterns!")
+print("\n☕ Take a 15-minute break before sentiment analysis!")
